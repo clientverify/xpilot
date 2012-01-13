@@ -29,8 +29,8 @@
 
 #define MAX_BUTTON_DEFS		10
 
-static BITV_DECL(keyv, NUM_KEYS);
-static unsigned char keyv_new[NUM_KEYS];
+BITV_DECL(keyv, NUM_KEYS);
+unsigned char keyv_new[NUM_KEYS];
 
 keys_t buttonDefs[MAX_POINTER_BUTTONS][MAX_BUTTON_DEFS+1];
 
@@ -71,16 +71,22 @@ void Pointer_control_newbie_message(void)
 
 void Pointer_control_set_state(bool on)
 {
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS
     if (clData.pointerControl == on)
 	return;
     Platform_specific_pointer_control_set_state(on);
     clData.pointerControl = on;
     if (!clData.restorePointerControl)
 	Pointer_control_newbie_message();
+#endif
+#endif
 }
 
 void Talk_set_state(bool on)
 {
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS
     if (clData.talking == on)
 	return;
     if (on) {
@@ -99,6 +105,8 @@ void Talk_set_state(bool on)
 	}
     }
     clData.talking = on;
+#endif
+#endif
 }
 
 static inline int pointer_button_index_by_option(xp_option_t *opt)
