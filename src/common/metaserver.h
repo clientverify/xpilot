@@ -27,9 +27,9 @@
 #define	METASERVER_H
 
 #define META_PORT	5500	/* for server-metaserver communication */
-#define META_HOST	"meta.xpilot.org"
-#define META_HOST_TWO	"meta2.xpilot.org"
-#define META_IP		"129.242.13.151"
-#define META_IP_TWO	"132.235.197.27"
+#define META_HOST	"localhost"
+#define META_HOST_TWO	"localhost"
+#define META_IP		"127.0.0.1"
+#define META_IP_TWO	"127.0.0.1"
 
 #endif

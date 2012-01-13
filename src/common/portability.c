@@ -45,9 +45,15 @@ void Get_login_name(char *buf, size_t size)
     GetUserName(buf, &nsize);
     buf[size - 1] = '\0';
 #else
+/* rcochran - disable call to getpwuid by default */
+#ifndef HAVE_GETPWUID 
     /* Unix */
+    char *name = "kudzoo";
+    strlcpy(buf, name, size);
+#else
     struct passwd *pwent = getpwuid(geteuid());
     strlcpy(buf, pwent->pw_name, size);
+#endif
 #endif
 }
 

@@ -827,7 +827,7 @@ static void Parse_xpilotrc_line(const char *line)
 
     t.opt = opt;
     t.comment = comment;
-    STORE(xpilotrc_line_t,
+    STORE_UNMODIFIED(xpilotrc_line_t,
 	  xpilotrc_lines, num_xpilotrc_lines, max_xpilotrc_lines, t);
     num_ok_options++;
     XFREE(lcpy);
@@ -841,7 +841,7 @@ static void Parse_xpilotrc_line(const char *line)
     XFREE(comment);
     t.opt = NULL;
     t.comment = xp_safe_strdup(line);
-    STORE(xpilotrc_line_t,
+    STORE_UNMODIFIED(xpilotrc_line_t,
 	  xpilotrc_lines, num_xpilotrc_lines, max_xpilotrc_lines, t);
     XFREE(lcpy);
 }

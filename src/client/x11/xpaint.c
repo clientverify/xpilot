@@ -79,8 +79,10 @@ int Paint_init(void)
     if (Init_asteroids() == -1)
 	return -1;
 
+#ifndef KLEEIFY_EVENTS
     if (Bitmaps_init() == -1)
 	return -1;
+#endif
     
     return 0;
 }
@@ -249,6 +251,7 @@ void Paint_frame(void)
     else if (radar_exposures > 2)
 	Paint_world_radar();
 
+#ifndef NUKLEAR
     if (dbuf_state->type == PIXMAP_COPY)
 	XCopyArea(dpy, drawPixmap, drawWindow, gameGC,
 		  0, 0, draw_width, draw_height, 0, 0);
@@ -288,6 +291,7 @@ void Paint_frame(void)
     Paint_clock(false);
 
     XFlush(dpy);
+#endif
 }
 
 
