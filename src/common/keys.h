@@ -26,6 +26,7 @@
 #ifndef KEYS_H
 #define KEYS_H
 
+
 /*
  * The following enum type defines the possible actions as a result of
  * a keypress or keyrelease.
@@ -48,7 +49,7 @@ typedef enum {
     KEY_DROP_MINE,
     KEY_DETACH_MINE,
     KEY_TURN_LEFT,
-    KEY_TURN_RIGHT,
+    KEY_TURN_RIGHT,						/* 14 */
     KEY_SELF_DESTRUCT,
     KEY_LOSE_ITEM,		/* Was KEY_ID_MODE up to 3.2.5 */
     KEY_PAUSE,

@@ -63,7 +63,7 @@
 /*
  * Maximum number of socket i/o retries if datagram socket.
  */
-#define MAX_SOCKBUF_RETRIES	2
+#define MAX_SOCKBUF_RETRIES	2000  /* rcochran 2 -> 2000 */
 
 /*
  * A buffer to reduce the number of system calls made and to reduce

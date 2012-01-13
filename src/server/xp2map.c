@@ -43,16 +43,21 @@ static void tagstart(void *data, const char *el, const char **attr)
     if (!strcasecmp(el, "XPilotMap")) {
 	double version = 0;
 	while (*attr) {
-	    if (!strcasecmp(*attr, "version"))
-		version = atof(*(attr + 1));
-	    attr += 2;
+	  if (!strcasecmp(*attr, "version")) {
+	    version = atof(*(attr + 1));
+	    printf("Reading version as: %s\n",*(attr+1));
+	    printf("Stored version as: %lf == %f\n",version,version);
+	  }
+	  attr += 2;
 	}
 	if (version == 0) {
 	    warn("Old(?) map file with no version number");
 	    warn("Not guaranteed to work");
 	}
-	else if (version < 1)
+	else if (version < 1) {
 	    warn("Impossible version in map file");
+	    printf("Impossible version in map file: %lf\n",version); /* DJB */
+	}
 	else if (version > 1.2) {
 	    warn("Map file has newer version than this server recognizes.");
 	    warn("The map file might use unsupported features.");

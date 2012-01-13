@@ -26,18 +26,45 @@
 #ifndef	BIT_H
 #define	BIT_H
 
+typedef unsigned char bitv_t;
 #define SET_BIT(w, bit)		( (w) |= (bit) )
 #define CLR_BIT(w, bit)		( (w) &= ~(bit) )
 #define BIT(w, bit)		( (w) & (bit) )
 #define TOGGLE_BIT(w, bit)	( (w) ^= (bit) )
 
 #define BITV_SIZE	(8 * sizeof(bitv_t))
-#define BITV_DECL(X,N)	bitv_t (X)[((N) + BITV_SIZE - 1) / BITV_SIZE]
-#define BITV_SET(X,N)	((X)[(N) / BITV_SIZE] |= 1 << (N) % BITV_SIZE)
-#define BITV_CLR(X,N)	((X)[(N) / BITV_SIZE] &= ~(1 << (N) % BITV_SIZE))
-#define BITV_ISSET(X,N)	((X)[(N) / BITV_SIZE] & (1 << (N) % BITV_SIZE))
-#define BITV_TOGGLE(X,N)	((X)[(N) / BITV_SIZE] ^= 1 << (N) % BITV_SIZE)
 
-typedef unsigned char bitv_t;
+// Original Macros
+#define _BITV_SIZE		(8 * sizeof(bitv_t))
+#define _BITV_DECL(X,N)		bitv_t (X)[((N) + BITV_SIZE - 1) / BITV_SIZE]
+#define _BITV_SET(X,N)		((X)[(N) / BITV_SIZE] |= 1 << (N) % BITV_SIZE)
+#define _BITV_CLR(X,N)		((X)[(N) / BITV_SIZE] &= ~(1 << (N) % BITV_SIZE))
+#define _BITV_ISSET(X,N)	((X)[(N) / BITV_SIZE] & (1 << (N) % BITV_SIZE))
+#define _BITV_TOGGLE(X,N)	((X)[(N) / BITV_SIZE] ^= 1 << (N) % BITV_SIZE)
+
+// Klee char array macros
+#define KLEE_BITV_DECL(X,N)	bitv_t (X)[(N)]
+#define KLEE_BITV_SET(X,N)	((X)[(N)] = 0xFF)
+#define KLEE_BITV_CLR(X,N)	((X)[(N)] = 0)
+#define KLEE_BITV_ISSET(X,N)	((X)[(N)])
+#define KLEE_BITV_TOGGLE(X,N)	((X)[(N)] = (X)[(N)] ? 0 : 0xFF)
+
+//#ifdef KLEE
+//
+//#define BITV_DECL 	KLEE_BITV_DECL
+//#define BITV_SET 	KLEE_BITV_SET
+//#define BITV_CLR 	KLEE_BITV_CLR
+//#define BITV_ISSET 	KLEE_BITV_ISSET
+//#define BITV_TOGGLE 	KLEE_BITV_TOGGLE
+//
+//#else
+
+#define BITV_DECL 	_BITV_DECL
+#define BITV_SET 	_BITV_SET
+#define BITV_CLR 	_BITV_CLR
+#define BITV_ISSET 	_BITV_ISSET
+#define BITV_TOGGLE 	_BITV_TOGGLE
+
+//#endif
 
 #endif

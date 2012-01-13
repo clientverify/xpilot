@@ -25,6 +25,47 @@
 
 #include "xpclient_x11.h"
 #include "../xhacks.h"
+static void printEventType(int type) {
+switch(type) {
+#define PRINTTYPE(x) case x: printf(" EVENT " #x "\n"); break;
+    PRINTTYPE(KeyPress)
+    PRINTTYPE(KeyRelease)
+    PRINTTYPE(ButtonPress)
+    PRINTTYPE(ButtonRelease)
+    PRINTTYPE(MotionNotify)
+    PRINTTYPE(EnterNotify)
+    PRINTTYPE(LeaveNotify)
+    PRINTTYPE(FocusIn)
+    PRINTTYPE(FocusOut)
+    PRINTTYPE(KeymapNotify)
+    PRINTTYPE(Expose)
+    PRINTTYPE(GraphicsExpose)
+    PRINTTYPE(NoExpose)
+    PRINTTYPE(VisibilityNotify)
+    PRINTTYPE(CreateNotify)
+    PRINTTYPE(DestroyNotify)
+    PRINTTYPE(UnmapNotify)
+    PRINTTYPE(MapNotify)
+    PRINTTYPE(MapRequest)
+    PRINTTYPE(ReparentNotify)
+    PRINTTYPE(ConfigureNotify)
+    PRINTTYPE(ConfigureRequest)
+    PRINTTYPE(GravityNotify)
+    PRINTTYPE(ResizeRequest)
+    PRINTTYPE(CirculateNotify)
+    PRINTTYPE(CirculateRequest)
+    PRINTTYPE(PropertyNotify)
+    PRINTTYPE(SelectionClear)
+    PRINTTYPE(SelectionRequest)
+    PRINTTYPE(SelectionNotify)
+    PRINTTYPE(ColormapNotify)
+    PRINTTYPE(ClientMessage)
+    PRINTTYPE(MappingNotify)
+    PRINTTYPE(LASTEvent)
+#undef PRINTTYPE
+    }
+}
+
 
 int	talk_key_repeating;
 XEvent	talk_key_repeat_event;
@@ -165,8 +206,18 @@ void Key_event(XEvent *event)
 {
     KeySym ks;
 
-    if ((ks = XLookupKeysym(&event->xkey, 0)) == NoSymbol)
+#ifdef KLEEIFY_EVENTS
+    if (!g_kleeify_events) {
+	if ((ks = NUKI(XLookupKeysym)(&event->xkey, 0)) == NoSymbol)
+	    return;
+    } else {
+      //klee_make_symbolic_unknown_size(&ks, "keysym");
+      g_klee_sent_keyv = 0;
+    }
+#else
+	if ((ks = my_XLookupKeysym(&event->xkey, 0)) == NoSymbol)
 	return;
+#endif
 
     switch(event->type) {
     case KeyPress:
@@ -178,16 +229,26 @@ void Key_event(XEvent *event)
     default:
 	return;
     }
+
+#ifdef KLEEIFY_EVENTS
+    if (g_kleeify_events) {
+      klee_finish_constraints();
+      klee_write_constraints();
+    }
+#endif
 }
 
 void Talk_event(XEvent *event)
 {
+#ifndef NUKLEAR
     if (!Talk_do_event(event))
 	Talk_set_state(false);
+#endif
 }
 
 static void Handle_talk_key_repeat(void)
 {
+#ifndef NUKLEAR
     int i;
 
     if (talk_key_repeating) {
@@ -202,48 +263,60 @@ static void Handle_talk_key_repeat(void)
 		talk_key_repeating = 0;
 	}
     }
+#endif
 }
 
 void xevent_keyboard(int queued)
 {
     int i, n;
-    XEvent event;
+    //XEvent event;
 
+#ifndef NUKLEAR
     Handle_talk_key_repeat();
+#endif
 
     if (kdpy) {
-	n = XEventsQueued(kdpy, queued);
-	for (i = 0; i < n; i++) {
-	    XNextEvent(kdpy, &event);
-	    switch (event.type) {
-	    case KeyPress:
-	    case KeyRelease:
-		Key_event(&event);
-		break;
+		n = my_XEventsQueued(kdpy, queued);
+        for (i = 0; i < n; i++) {
+            IFNUKLEAR(nuklear_checkpoint(0));
+            {
+                XEvent *event = malloc(sizeof(XEvent));
+				my_XNextEvent(kdpy, event);
+                //printf("xevent_keyboard: ");
+                //printEventType((int)event->type);
+                switch (event->type) {
+                case KeyPress:
+                case KeyRelease:
+                    Key_event(event);
+                    break;
 
-		/* Back in play */
-	    case FocusIn:
-		gotFocus = true;
-		XAutoRepeatOff(kdpy);
-		break;
+                    /* Back in play */
+                case FocusIn:
+                    gotFocus = true;
+                    XAutoRepeatOff(kdpy);
+                    break;
 
-		/* Probably not playing now */
-	    case FocusOut:
-	    case UnmapNotify:
-		gotFocus = false;
-		XAutoRepeatOn(kdpy);
-		break;
+                    /* Probably not playing now */
+                case FocusOut:
+                case UnmapNotify:
+                    gotFocus = false;
+                    XAutoRepeatOn(kdpy);
+                    break;
 
-	    case MappingNotify:
-		XRefreshKeyboardMapping(&event.xmapping);
-		break;
+                case MappingNotify:
+                    XRefreshKeyboardMapping(&event->xmapping);
+                    break;
 
-	    default:
-		warn("Unknown event type (%d) in xevent_keyboard",
-		     event.type);
-		break;
-	    }
-	}
+                default:
+                    warn("Unknown event type (%d) in xevent_keyboard",
+                         event->type);
+                    break;
+                }
+                free(event);
+            }
+            // rcochran
+            Net_flush();
+        }
     }
 }
 
@@ -277,10 +350,11 @@ void xevent_pointer(void)
     }
 }
 
+
 int x_event(int new_input)
 {
     int queued = 0, i, n;
-    XEvent event;
+    //XEvent event;
 
 #ifdef SOUND
     audioEvents();
@@ -293,97 +367,111 @@ int x_event(int new_input)
     case 1: queued = QueuedAfterReading; break;
     case 2: queued = QueuedAfterFlush; break;
     default:
-	warn("Bad input queue type (%d)", new_input);
-	return -1;
+            warn("Bad input queue type (%d)", new_input);
+            return -1;
     }
-    n = XEventsQueued(dpy, queued);
+	n = my_XEventsQueued(dpy, queued);
     for (i = 0; i < n; i++) {
-	XNextEvent(dpy, &event);
+        IFNUKLEAR(nuklear_checkpoint(0));
+        {
+            XEvent *event = malloc(sizeof(XEvent));
+			my_XNextEvent(dpy, event);
+            //printf("x_event: ");
+            //printEventType((int)event->type);
+            switch (event->type) {
 
-	switch (event.type) {
-	    /*
-	     * after requesting a selection we are notified that we
-	     * can access it.
-	     */
-	case SelectionNotify:
-	    SelectionNotify_event(&event);
-	    break;
-	    /*
-	     * we are requested to provide a selection.
-	     */
-	case SelectionRequest:
-	    SelectionRequest_event(&event);
-	    break;
+#ifndef NUKLEAR
+                /*
+                 * after requesting a selection we are notified that we
+                 * can access it.
+                 */
+            case SelectionNotify:
+                SelectionNotify_event(event);
+                break;
+                /*
+                 * we are requested to provide a selection.
+                 */
+            case SelectionRequest:
+                SelectionRequest_event(event);
+                break;
 
-	case SelectionClear:
-	    Clear_selection();
-	    break;
+            case SelectionClear:
+                Clear_selection();
+                break;
 
-	case MapNotify:
-	    MapNotify_event(&event);
-	    break;
+            case MapNotify:
+                MapNotify_event(&event);
+                break;
 
-	case ClientMessage:
-	    if (ClientMessage_event(&event) == -1)
-		return -1;
-	    break;
+            case ClientMessage:
+                if (ClientMessage_event(event) == -1)
+                    return -1;
+                break;
 
-	    /* Back in play */
-	case FocusIn:
-	    FocusIn_event(&event);
-	    break;
+                /* Back in play */
+            case FocusIn:
+                FocusIn_event(event);
+                break;
 
-	    /* Probably not playing now */
-	case FocusOut:
-	case UnmapNotify:
-	    UnmapNotify_event(&event);
-	    break;
+                /* Probably not playing now */
+            case FocusOut:
+            case UnmapNotify:
+                UnmapNotify_event(event);
+                break;
 
-	case MappingNotify:
-	    XRefreshKeyboardMapping(&event.xmapping);
-	    break;
+            case MappingNotify:
+                XRefreshKeyboardMapping(&event->xmapping);
+                break;
 
+#endif
+            case ConfigureNotify:
+                ConfigureNotify_event(event);
+                break;
 
-	case ConfigureNotify:
-	    ConfigureNotify_event(&event);
-	    break;
+            case KeyPress:
+                talk_key_repeating = 0;
+                /* FALLTHROUGH */
+            case KeyRelease:
+                KeyChanged_event(event);
+                break;
 
+#ifndef NUKLEAR
+            case ButtonPress:
+                ButtonPress_event(event);
+                break;
 
-	case KeyPress:
-	    talk_key_repeating = 0;
-	    /* FALLTHROUGH */
-	case KeyRelease:
-	    KeyChanged_event(&event);
-	    break;
+            case MotionNotify:
+                MotionNotify_event(event);
+                break;
 
-	case ButtonPress:
-	    ButtonPress_event(&event);
-	    break;
+            case ButtonRelease:
+                if (ButtonRelease_event(event) == -1)
+                    return -1;
+                break;
 
-	case MotionNotify:
-	    MotionNotify_event(&event);
-	    break;
+            case Expose:
+                Expose_event(event);
+                break;
 
-	case ButtonRelease:
-	    if (ButtonRelease_event(&event) == -1)
-	        return -1;
-	    break;
-
-	case Expose:
-	    Expose_event(&event);
-	    break;
-
-	case EnterNotify:
-	case LeaveNotify:
-	    Widget_event(&event);
-	    break;
-
-	default:
-	    break;
-	}
+            case EnterNotify:
+            case LeaveNotify:
+                Widget_event(event);
+                break;
+#endif
+            default:
+                break;
+            }
+            free(event);
+        }
+        // rcochran
+        Net_flush();
     }
 
+#ifndef NUKLEAR
     xevent_keyboard(queued);
     xevent_pointer();
+#endif
+
+    IFNUKLEAR(nuklear_checkpoint(0));
     return 0;
 }

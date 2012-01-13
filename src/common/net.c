@@ -268,8 +268,10 @@ int Sockbuf_read(sockbuf_t *sbuf)
 #endif
 	while ((len = sock_read(&sbuf->sock, sbuf->buf + sbuf->len, max))
 	       <= 0) {
-	    if (len == 0)
+	    if (len == 0) {
+		DEBUG_PRINTF("len = 0, returning 0");
 		return 0;
+	    }
 #ifdef _WINDOWS
 	    errno = WSAGetLastError();
 #endif
@@ -290,10 +292,14 @@ int Sockbuf_read(sockbuf_t *sbuf)
 		Trace("errno=%d (%s) len = %d during sock_read\n", 
 			errno, _GetWSockErrText(errno), len);
 */			
+            /* rcochran - force xpilot to retry forever! Mwahahaha*/
+            /* 
 	    if (++i > MAX_SOCKBUF_RETRIES) {
 		error("Can't recv on socket");
 		return -1;
 	    }
+            */
+            /* rcochran */
 	    {
 		static int recv_err;
 		
@@ -327,6 +333,7 @@ int Sockbuf_read(sockbuf_t *sbuf)
 	sbuf->len += len;
     }
 
+    DEBUG_PRINTF("returning sbuf->len.");
     return sbuf->len;
 }
 
@@ -396,6 +403,10 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 	end -= SOCKBUF_WRITE_SPARE;
 
     buf = sbuf->buf + sbuf->len;
+
+
+    IFDJBNETLOG(FILE *logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
+
     for (i = 0; failure == 0 && fmt[i] != '\0'; i++) {
 	if (fmt[i] == '%') {
 	    switch (fmt[++i]) {
@@ -405,6 +416,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		    break;
 		}
 		cval = va_arg(ap, int);
+		IFDJBNETLOG(fprintf(logfp,"\tchar  '%c'\n",cval));     /* DJB */
 		*buf++ = cval;
 		break;
 	    case 'd':
@@ -413,6 +425,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		    break;
 		}
 		ival = va_arg(ap, int);
+		IFDJBNETLOG(fprintf(logfp,"\tint   '%d'\n",ival));     /* DJB */
 		*buf++ = ival >> 24;
 		*buf++ = ival >> 16;
 		*buf++ = ival >> 8;
@@ -424,6 +437,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		    break;
 		}
 		uval = va_arg(ap, unsigned);
+		IFDJBNETLOG(fprintf(logfp,"\tuint  '%u'\n",uval));     /* DJB */
 		*buf++ = uval >> 24;
 		*buf++ = uval >> 16;
 		*buf++ = uval >> 8;
@@ -437,11 +451,13 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		switch (fmt[++i]) {
 		case 'd':
 		    sval = va_arg(ap, int);
+		    IFDJBNETLOG(fprintf(logfp,"\thint  '%hd'\n",sval));     /* DJB */
 		    *buf++ = sval >> 8;
 		    *buf++ = (char)sval;
 		    break;
 		case 'u':
 		    usval = va_arg(ap, unsigned);
+		    IFDJBNETLOG(fprintf(logfp,"\thuint '%hd'\n",usval));     /* DJB */
 		    *buf++ = usval >> 8;
 		    *buf++ = (char)usval;
 		    break;
@@ -458,6 +474,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		switch (fmt[++i]) {
 		case 'd':
 		    lval = va_arg(ap, long);
+		    IFDJBNETLOG(fprintf(logfp,"\tlint  '%ld'\n",lval));     /* DJB */
 		    *buf++ = (char)(lval >> 24);
 		    *buf++ = (char)(lval >> 16);
 		    *buf++ = (char)(lval >> 8);
@@ -465,6 +482,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 		    break;
 		case 'u':
 		    ulval = va_arg(ap, unsigned long);
+		    IFDJBNETLOG(fprintf(logfp,"\tluint '%lu'\n",ulval));     /* DJB */
 		    *buf++ = (char)(ulval >> 24);
 		    *buf++ = (char)(ulval >> 16);
 		    *buf++ = (char)(ulval >> 8);
@@ -479,6 +497,7 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 	    case 's':	/* Small strings */
 		max_str_size = (fmt[i] == 'S') ? MSG_LEN : MAX_CHARS;
 		str = va_arg(ap, char *);
+		IFDJBNETLOG(fprintf(logfp,"\tstr   '%s'\n",str));     /* DJB */
 		if (buf + max_str_size >= end)
 		    stop = end;
 		else
@@ -498,6 +517,8 @@ int Packet_printf(sockbuf_t *sbuf, const char *fmt, ...)
 	} else
 	    failure = PRINTF_FMT;
     }
+    IFDJBNETLOG(fclose(logfp));     /* DJB */
+
     if (failure != 0) {
 	count = -1;
 	if (failure == PRINTF_SIZE) {

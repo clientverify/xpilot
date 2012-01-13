@@ -60,6 +60,7 @@ extern struct options {
     bool	NoQuit;
     bool	logRobots;
     int		framesPerSecond;
+    char	*ktestFileName; /* rcochran commandline option to specify ktest output file */
     char	*mapFileName;
     char	*mapData;
     int		mapWidth;

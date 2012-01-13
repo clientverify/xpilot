@@ -34,11 +34,15 @@ extern void Del_HUD_message(void);
 
 void Add_alert_message(const char *message, double timeout)
 {
+#ifndef NUKLEAR
     Add_HUD_message(message);
+#endif
 }
 void Clear_alert_messages(void)
 {
+#ifndef NUKLEAR
     Del_HUD_message();
+#endif
 }
 /*
  * code for the following three functions and the selectionEvents
@@ -89,7 +93,7 @@ static void Selection_request(void)
     else if (XGetSelectionOwner(dpy, XA_PRIMARY) == None)
 	Selection_paste(DefaultRootWindow(dpy), XA_CUT_BUFFER0, False);
     else {
-	prop = XInternAtom(dpy, "VT_SELECTION", False);
+	prop = NUKI(XInternAtom)(dpy, "VT_SELECTION", False);
 	XConvertSelection(dpy, XA_PRIMARY, XA_STRING, prop, talkWindow,
 			    CurrentTime);
 	/* the selectionNotify event 'will do the rest' */
@@ -106,7 +110,7 @@ static void Selection_send(const XSelectionRequestEvent *rq)
     static Atom xa_targets = None;
 
     if (xa_targets == None)
-	xa_targets = XInternAtom(dpy, "TARGETS", False);
+	xa_targets = NUKI(XInternAtom)(dpy, "TARGETS", False);
 
     ev.xselection.type = SelectionNotify;
     ev.xselection.property = None;
@@ -214,6 +218,13 @@ void UnmapNotify_event(XEvent *event)
 
 void ConfigureNotify_event(XEvent *event)
 {
+
+#ifdef NUKLEAR
+    Check_view_dimensions();
+    Net_flush();
+		return;
+#endif
+
     XConfigureEvent *conf;
     static unsigned int conf_width = 0;
     static unsigned int conf_height = 0;
@@ -251,6 +262,7 @@ void KeyChanged_event(XEvent *event)
 #endif
     if (event->xkey.window == topWindow)
 	Key_event(event);
+#ifndef NUKLEAR
     else if (event->xkey.window == talkWindow) {
 	/* letting release events through to prevent some keys from locking */
 	if (event->type == KeyRelease)
@@ -268,6 +280,7 @@ void KeyChanged_event(XEvent *event)
 	if (!clData.talking)
 	    talk_key_repeating = 0;
     }
+#endif
 	/* else : here we can add widget.c key uses. */
 }
 
@@ -275,6 +288,7 @@ void ButtonPress_event(XEvent *event)
 {
     XButtonEvent *xbutton = &(event->xbutton);
 
+#ifndef NUKLEAR
     if (clData.pointerControl) {
 	assert(!clData.talking);
 	Pointer_button_pressed((int)xbutton->button);
@@ -324,10 +338,12 @@ void ButtonPress_event(XEvent *event)
     if (Widget_event(event) != 0)
 	return;
     Expose_button_window(BLACK, xbutton->window);
+#endif
 }
 
 void MotionNotify_event(XEvent *event)
 {
+#ifndef NUKLEAR
     if (event->xmotion.window == drawWindow) {
 	if (clData.pointerControl) {
 	    if (!clData.talking) {
@@ -339,10 +355,12 @@ void MotionNotify_event(XEvent *event)
 	}
     } else
 	Widget_event(event);
+#endif
 }
 
 int ButtonRelease_event(XEvent *event)
 {
+#ifndef NUKLEAR
     XButtonEvent *xbutton = &(event->xbutton);
 
     if (clData.pointerControl) {
@@ -401,10 +419,12 @@ int ButtonRelease_event(XEvent *event)
     else if (xbutton->window == about_prev_b)
 	About(about_prev_b);
     return 0;
+#endif
 }
 
 void Expose_event(XEvent *event)
 {
+#ifndef NUKLEAR
     if (event->xexpose.window == playersWindow) {
 	if (event->xexpose.count == 0) {
 	    players_exposed = true;
@@ -433,4 +453,5 @@ void Expose_event(XEvent *event)
 	    Expose_button_window(buttonColor ? buttonColor : RED,
 				 event->xexpose.window);
     }
+#endif
 }

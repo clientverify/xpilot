@@ -32,6 +32,14 @@
 #define SOCK_IS_OK		(0)
 #define SOCK_TIMEOUT_SECONDS	3
 
+/* DJB */
+#define PACKET_LOGDIR		"packetlogs"
+#define NETWORK_LOGFILE		"net.log"	/* network log */
+#define KEY_LOGDIR		"keyboardlogs"	/* keyboard log */
+#define KEY_LOGFILE		"keyboardlog."	/* keyboard log */
+#define FRAME_LOGDIR		PACKET_LOGDIR"/frame_"	/* packet/frame log */
+#define PACKET_LOGFILE		"packet."	/* packet/frame log */
+
 enum sock_flags_e {
     SOCK_FLAG_INIT	= 1,
     SOCK_FLAG_UDP	= 2,

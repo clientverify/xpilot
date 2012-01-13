@@ -59,11 +59,19 @@
  * The timeout specifies the number of seconds each connection
  * state may last.
  */
+
+#define LISTEN_TIMEOUT		4000
+#define SETUP_TIMEOUT		15000
+#define LOGIN_TIMEOUT		4000
+#define READY_TIMEOUT		4000
+#define IDLE_TIMEOUT		3000
+/*
 #define LISTEN_TIMEOUT		4
 #define SETUP_TIMEOUT		15
-#define LOGIN_TIMEOUT		40
-#define READY_TIMEOUT		40
-#define IDLE_TIMEOUT		30
+#define LOGIN_TIMEOUT		4
+#define READY_TIMEOUT		4
+#define IDLE_TIMEOUT		3
+*/
 
 /*
  * Maximum roundtrip time taken as serious for rountrip time calculations.
@@ -107,6 +115,7 @@ typedef struct {
     int			team;			/* team of player */
     unsigned		version;		/* XPilot version of client */
     long		last_key_change;	/* last keyboard change */
+    long		kbseq_ack;      	/* last kbseq seen */
     long		talk_sequence_num;	/* talk acknowledgement */
     long		motd_offset;		/* offset into motd or -1 */
     long		motd_stop;		/* max offset into motd */

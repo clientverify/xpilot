@@ -234,12 +234,15 @@ static XFontStruct* Set_font(Display* display, GC gc,
 {
     XFontStruct*	font;
 
-    if ((font = XLoadQueryFont(display, fontName)) == NULL) {
+    if ((font = NUKI(XLoadQueryFont)(display, fontName)) == NULL) {
 	error("Couldn't find font '%s' for %s, using default font",
 	      fontName, resName);
-	font = XQueryFont(display, XGContextFromGC(gc));
-    } else
-	XSetFont(display, gc, font->fid);
+	font = NUKI(XQueryFont)(display, XGContextFromGC(gc));
+      KLEE_EXTERNAL_MEM(XFontStruct, font);
+    } else {
+      KLEE_EXTERNAL_MEM(XFontStruct, font);
+    XSetFont(display, gc, font->fid);
+    }
 
     return font;
 }
@@ -262,7 +265,7 @@ static void Init_disp_prop(Display *d, Window win,
     xwmh.flags	   = InputHint|StateHint|IconPixmapHint;
     xwmh.input	   = True;
     xwmh.initial_state = NormalState;
-    xwmh.icon_pixmap   = XCreateBitmapFromData(d, win,
+    xwmh.icon_pixmap   = NUKI(XCreateBitmapFromData)(d, win,
 					       (char *)icon_bits,
 					       icon_width, icon_height);
 
@@ -309,8 +312,8 @@ static void Init_disp_prop(Display *d, Window win,
      * Specify IO error handler and the WM_DELETE_WINDOW atom in
      * an attempt to catch 'nasty' quits.
      */
-    ProtocolAtom = XInternAtom(d, "WM_PROTOCOLS", False);
-    KillAtom = XInternAtom(d, "WM_DELETE_WINDOW", False);
+    ProtocolAtom = NUKI(XInternAtom)(d, "WM_PROTOCOLS", False);
+    KillAtom = NUKI(XInternAtom)(d, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(d, win, &KillAtom, 1);
     XSetIOErrorHandler(FatalError);
 }
@@ -336,8 +339,10 @@ int Init_top(void)
     if (topWindow)
 	fatal("Init_top called twice");
 
+#ifndef NUKLEAR
     if (Colors_init() == -1)
 	return -1;
+#endif
 
     radarDrawRectanglePtr = XFillRectangle;
 
@@ -346,7 +351,7 @@ int Init_top(void)
      */
     top_flags = 0;
     if (geometry != NULL && geometry[0] != '\0')
-	mask = XParseGeometry(geometry, &x, &y, &w, &h);
+	mask = NUKI(XParseGeometry)(geometry, &x, &y, &w, &h);
     else
 	mask = 0;
 
@@ -408,7 +413,7 @@ int Init_top(void)
 	sattr.override_redirect = True;
 	mask |= CWOverrideRedirect;
     }
-    topWindow = XCreateWindow(dpy,
+    topWindow = NUKI(XCreateWindow)(dpy,
 			      DefaultRootWindow(dpy),
 			      top_x, top_y,
 			      top_width, top_height,
@@ -422,7 +427,7 @@ int Init_top(void)
 		   top_x, top_y, top_flags);
     if (kdpy) {
 	int scr = DefaultScreen(kdpy);
-	keyboardWindow = XCreateSimpleWindow(kdpy,
+	keyboardWindow = NUKI(XCreateSimpleWindow)(kdpy,
 					     DefaultRootWindow(kdpy),
 					     top_x, top_y,
 					     top_width, top_height,
@@ -438,7 +443,7 @@ int Init_top(void)
      */
     for (i = 0; i < NUM_ITEMS; i++)
 	itemBitmaps[i]
-	    = XCreateBitmapFromData(dpy, topWindow,
+	    = NUKI(XCreateBitmapFromData)(dpy, topWindow,
 				    (char *)itemBitmapData[i].data,
 				    ITEM_SIZE, ITEM_SIZE);
 
@@ -453,14 +458,14 @@ int Init_top(void)
     values
 	= GCLineWidth|GCLineStyle|GCCapStyle|GCJoinStyle|GCGraphicsExposures;
 
-    messageGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    radarGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    buttonGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    scoreListGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    textGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    talkGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    motdGC	= XCreateGC(dpy, topWindow, values, &xgc);
-    gameGC	= XCreateGC(dpy, topWindow, values, &xgc);
+    messageGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    radarGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    buttonGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    scoreListGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    textGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    talkGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    motdGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
+    gameGC	= NUKI(XCreateGC)(dpy, topWindow, values, &xgc);
     XSetBackground(dpy, gameGC, colors[BLACK].pixel);
 
     /*
@@ -502,8 +507,10 @@ int Init_top(void)
 	      BlackPixel(dpy, DefaultScreen(dpy)),
 	      GXcopy, AllPlanes);
 
+#ifndef NUKLEAR
     if (dbuf_state->type == COLOR_SWITCH)
 	XSetPlaneMask(dpy, gameGC, dbuf_state->drawing_planes);
+#endif
 
     return 0;
 }
@@ -523,18 +530,21 @@ int Init_playing_windows(void)
 	if (Init_top())
 	    return -1;
     }
-
     Scale_dashes();
 
     draw_width = top_width - (256 + 2);
     draw_height = top_height;
-    drawWindow = XCreateSimpleWindow(dpy, topWindow, 258, 0,
+    drawWindow = NUKI(XCreateSimpleWindow)(dpy, topWindow, 258, 0,
 				     draw_width, draw_height,
 				     0, 0, colors[BLACK].pixel);
-    radarWindow = XCreateSimpleWindow(dpy, topWindow, 0, 0,
+    radarWindow = NUKI(XCreateSimpleWindow)(dpy, topWindow, 0, 0,
 				      256, RadarHeight, 0, 0,
 				      colors[BLACK].pixel);
     radar_score_mapped = true;
+
+#ifdef NUKLEAR
+    return 0;
+#endif
 
     /* Create buttons */
 #define BUTTON_WIDTH	84
@@ -578,7 +588,7 @@ int Init_playing_windows(void)
     players_width = RadarWidth;
     players_height = top_height - (RadarHeight + ButtonHeight + 2);
     playersWindow
-	= XCreateSimpleWindow(dpy, topWindow,
+	= NUKI(XCreateSimpleWindow)(dpy, topWindow,
 			      0, (int)RadarHeight + ButtonHeight + 2,
 			      players_width, players_height,
 			      0, 0,
@@ -591,6 +601,7 @@ int Init_playing_windows(void)
     XSelectInput(dpy, playersWindow, ExposureMask);
     XSelectInput(dpy, drawWindow, ButtonPressMask | ButtonReleaseMask);
 
+#ifndef NUKLEAR
     /*
      * Initialize misc. pixmaps if we're not color switching.
      * (This could be in dbuff_init_buffer completely IMHO, -- Metalite)
@@ -599,19 +610,19 @@ int Init_playing_windows(void)
 
     case PIXMAP_COPY:
 	radarPixmap
-	    = XCreatePixmap(dpy, radarWindow, 256, RadarHeight, dispDepth);
+	    = NUKI(XCreatePixmap)(dpy, radarWindow, 256, RadarHeight, dispDepth);
 	radarPixmap2
-	    = XCreatePixmap(dpy, radarWindow, 256, RadarHeight, dispDepth);
+	    = NUKI(XCreatePixmap)(dpy, radarWindow, 256, RadarHeight, dispDepth);
 	drawPixmap
-	    = XCreatePixmap(dpy, drawWindow, draw_width, draw_height,
+	    = NUKI(XCreatePixmap)(dpy, drawWindow, draw_width, draw_height,
 			    dispDepth);
 	break;
 
     case MULTIBUFFER:
 	radarPixmap
-	    = XCreatePixmap(dpy, radarWindow, 256, RadarHeight, dispDepth);
+	    = NUKI(XCreatePixmap)(dpy, radarWindow, 256, RadarHeight, dispDepth);
 	radarPixmap2
-	    = XCreatePixmap(dpy, radarWindow, 256, RadarHeight, dispDepth);
+	    = NUKI(XCreatePixmap)(dpy, radarWindow, 256, RadarHeight, dispDepth);
 	dbuff_init_buffer(dbuf_state);
 	break;
 
@@ -619,13 +630,16 @@ int Init_playing_windows(void)
 	radarPixmap2 = radarWindow;
 	radarPixmap = radarWindow;
 	drawPixmap = drawWindow;
+#ifndef NUKLEAR
 	Paint_sliding_radar();
+#endif
 	break;
 
     default:
 	assert(0 && "Init_playing_windows: unknown dbuf state type.");
 	break;
     }
+#endif
 
     XAutoRepeatOff(dpy);	/* We don't want any autofire, yet! */
     if (kdpy)
@@ -635,12 +649,12 @@ int Init_playing_windows(void)
      * Define a blank cursor for use with pointer control
      */
     XQueryBestCursor(dpy, drawWindow, 1, 1, &w, &h);
-    pix = XCreatePixmap(dpy, drawWindow, w, h, 1);
-    cursorGC = XCreateGC(dpy, pix, 0, NULL);
+    pix = NUKI(XCreatePixmap)(dpy, drawWindow, w, h, 1);
+    cursorGC = NUKI(XCreateGC)(dpy, pix, 0, NULL);
     XSetForeground(dpy, cursorGC, 0);
     XFillRectangle(dpy, pix, cursorGC, 0, 0, w, h);
     XFreeGC(dpy, cursorGC);
-    pointerControlCursor = XCreatePixmapCursor(dpy, pix, pix, &colors[BLACK],
+    pointerControlCursor = NUKI(XCreatePixmapCursor)(dpy, pix, pix, &colors[BLACK],
 					       &colors[BLACK], 0, 0);
     XFreePixmap(dpy, pix);
 
@@ -731,11 +745,13 @@ void Resize(Window w, unsigned width, unsigned height)
     Check_view_dimensions();
     Net_flush();
     XResizeWindow(dpy, drawWindow, draw_width, draw_height);
+#ifndef NUKLEAR
     if (dbuf_state->type == PIXMAP_COPY) {
 	XFreePixmap(dpy, drawPixmap);
-	drawPixmap = XCreatePixmap(dpy, drawWindow, draw_width, draw_height,
+	drawPixmap = NUKI(XCreatePixmap)(dpy, drawWindow, draw_width, draw_height,
 				   dispDepth);
     }
+#endif
     players_height = top_height - (RadarHeight + ButtonHeight + 2);
     XResizeWindow(dpy, playersWindow,
 		  players_width, players_height);
@@ -749,6 +765,7 @@ void Resize(Window w, unsigned width, unsigned height)
  */
 void Platform_specific_cleanup(void)
 {
+#ifndef KLEEIFY_EVENTS
     /* Here we restore the mouse to its former self */
     /* the option may have been toggled in game to  */
     /* off so we cant trust that                    */
@@ -768,6 +785,7 @@ void Platform_specific_cleanup(void)
 	}
     }
     Widget_cleanup();
+#endif
 }
 
 

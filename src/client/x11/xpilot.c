@@ -47,11 +47,112 @@ const char *Program_name(void)
     return "xpilot-ng-x11";
 }
 
+#ifdef KLEE
+
+// array of pointers to copies of symbolic memory (post state memory)
+static void** klee_ptr_copy;
+
+// Enums of ptr and var names to be used as indexes into klee_ptr_copy
+#undef  KLEE_XX_PTR
+#undef  KLEE_XX_VAR
+#define KLEE_XX_PTR(x) ENUM_ ## x ,
+#define KLEE_XX_VAR(x) ENUM_ ## x ,
+enum { 
+#include "klee_state.inc" 
+};
+
+void klee_init_symbolic_memory() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR(x) + 1
+  #define KLEE_XX_VAR(x) + 1
+  // compute number of variables names
+  int klee_ptr_copy_count = 0
+  #include "klee_state.inc"  
+  ;
+
+  // allocate memory for pointer array
+  klee_ptr_copy = (void**) malloc(sizeof(void*) * klee_ptr_copy_count);
+}
+	
+void klee_make_symbolic_memory() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR KLEE_MAKE_SYMBOLIC_PTR
+  #define KLEE_XX_VAR KLEE_MAKE_SYMBOLIC_VAR
+
+  #include "klee_state.inc"
+}
+
+// Use klee_duplicate_symbolic() to create a symbolic copy and
+// store the pointer in klee_ptr_copy. Example for pointer variable 'self':
+//      klee_ptr_copy[ENUM_self] = (void*)klee_duplicate_symbolic(self);
+void klee_copy_symbolic_memory() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR KLEE_COPY_PTR
+  #define KLEE_XX_VAR KLEE_COPY_VAR
+
+  #include "klee_state.inc"
+}
+
+void klee_copy_symbolic_memory_name() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR KLEE_COPY_PTR_NAME
+  #define KLEE_XX_VAR KLEE_COPY_VAR_NAME
+
+  #include "klee_state.inc"
+}
+
+
+// finish the constraint by setting the original symbolic variable equal to its
+// copy. Example for pointer 'self': klee_equal(self, klee_ptr_copy[ENUM_self]);
+void klee_finish_constraints() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR KLEE_EQUAL_PTR
+  #define KLEE_XX_VAR KLEE_EQUAL_VAR
+
+  #include "klee_state.inc"
+}
+/*
+// Use klee_duplicate_symbolic() to create a symbolic copy and
+// store the pointer in klee_ptr_copy. Example for pointer variable 'self':
+//      klee_ptr_copy[ENUM_self] = (void*)klee_duplicate_symbolic(self);
+void klee_copy_symbolic_memory() {
+
+  #undef  KLEE_XX_PTR
+  #undef  KLEE_XX_VAR
+  #define KLEE_XX_PTR KLEE_COPY_PTR
+  #define KLEE_XX_VAR KLEE_COPY_VAR
+
+  #include "klee_state.inc"
+}
+*/
+#endif 
+
 /*
  * Oh glorious main(), without thee we cannot exist.
  */
 int main(int argc, char *argv[])
 {
+
+  cliloopID = 0;
+  isserver = 0;
+
+	Store_nuklear_options();
+keydb_init(&kdb);
+
+#ifdef KLEEIFY_NET_FRAME
+    Input_loop();
+#endif
+
     int result, retval = 1;
     bool auto_shutdown = false;
     Connect_param_t *conpar = &connectParam;
@@ -77,7 +178,10 @@ int main(int argc, char *argv[])
      */
     init_error(argv[0]);
 
-    seedMT( (unsigned)time(NULL) ^ Get_process_id());
+    /* rcochran - seed with a constant value*/
+    seedMT( 4357U );
+    //seedMT( (unsigned)time(NULL) ^ Get_process_id());
+    /* rcochran */
 
     memset(conpar, 0, sizeof(Connect_param_t));
 
@@ -107,7 +211,7 @@ int main(int argc, char *argv[])
     Handle_X_options();
     
     /* CLIENTRANK */
-    Init_saved_scores();
+    Init_saved_scores(); /* rcochran - do we need this? */
 
     if (xpArgs.list_servers)
 	xpArgs.auto_connect = true;
@@ -116,7 +220,6 @@ int main(int argc, char *argv[])
 	auto_shutdown = true;
 	xpArgs.auto_connect = true;
     }
-
     /*
      * --- Message of the Day ---
      */
