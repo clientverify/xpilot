@@ -588,6 +588,14 @@ extern int	lose_item_active;	/* one of the lose keys is pressed */
 
 extern int	        num_playing_teams;
 
+/* rcochran - added extern declarations for variables from client.c */
+extern double       teamscores[MAX_TEAMS];
+extern cannontime_t *cannons;
+extern int          num_cannons;
+extern target_t     *targets;
+extern int          num_targets;
+/* rcochran - end */
+
 extern fuelstation_t	*fuels;
 extern int		num_fuels;
 extern homebase_t	*bases;
