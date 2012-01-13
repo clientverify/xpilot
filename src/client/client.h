@@ -140,7 +140,8 @@ typedef struct {
  * The goal is to keep the number of malloc/realloc calls low
  * while not wasting too much memory because of over-allocation.
  */
-#define STORE(T,P,N,M,V)						\
+/* rcochran - the unmodified STORE macro */
+#define STORE_UNMODIFIED(T,P,N,M,V)						\
     if (N >= M && ((M <= 0)						\
 	? (P = (T *) malloc((M = 1) * sizeof(*P)))			\
 	: (P = (T *) realloc(P, (M += M) * sizeof(*P)))) == NULL) {	\
@@ -148,6 +149,10 @@ typedef struct {
 	exit(1);							\
     } else								\
 	(P[N++] = V)
+
+#define STORE(T,P,N,M,V)						\
+  STORE_UNMODIFIED(T,P,N,M,V)						\
+
 /*
  * Macro to make room in a given dynamic array for new elements.
  * P is the pointer to the array memory.
@@ -188,7 +193,7 @@ typedef struct {
 #if PAINT_FREE
 # define RELEASE(P, N, M)					\
 do {								\
-	if (!(N)) ; else (free(P), (M) = 0, (N) = 0);		\
+	if (!(N)) ; else (free(P), (M) = 0, (N) = 0, (P) = 0);	\ /* rcochran: added '(P) = 0' to set pointer value to zero */
 } while (0)
 #else
 # define RELEASE(P, N, M)	((N) = 0)
