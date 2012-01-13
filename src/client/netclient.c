@@ -66,9 +66,9 @@ static int		(*receive_tbl[256])(void),
 static int		keyboard_delta;
 static unsigned		magic;
 static time_t           last_send_anything;
-static long		last_keyboard_change,
-			last_keyboard_update,
-			reliable_offset,
+long		        last_keyboard_change; /*rcochran removed static */
+long			last_keyboard_update; /*rcochran removed static*/
+static long		reliable_offset,
 			talk_pending,
 			talk_sequence_num,
 			talk_last_send;
