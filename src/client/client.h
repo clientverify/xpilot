@@ -191,9 +191,10 @@ typedef struct {
 # define PAINT_FREE	1
 #endif
 #if PAINT_FREE
+/* rcochran: added '(P) = 0' below to set pointer value to zero */
 # define RELEASE(P, N, M)					\
 do {								\
-	if (!(N)) ; else (free(P), (M) = 0, (N) = 0, (P) = 0);	\ /* rcochran: added '(P) = 0' to set pointer value to zero */
+	if (!(N)) ; else (free(P), (M) = 0, (N) = 0, (P) = 0);	\
 } while (0)
 #else
 # define RELEASE(P, N, M)	((N) = 0)
