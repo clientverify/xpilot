@@ -26,6 +26,9 @@
 #ifndef XPCOMMON_H
 #define XPCOMMON_H
 
+
+#include "klee.h" /* rcochran */
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif

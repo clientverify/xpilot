@@ -26,6 +26,8 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+#include "klee.h" /* rcochran */
+
 #ifdef _WINDOWS
 #ifndef	_WINSOCKAPI_
 #include <winsock.h>
