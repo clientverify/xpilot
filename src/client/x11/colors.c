@@ -460,6 +460,7 @@ int Colors_init(void)
     if (colormap != 0)
 	Fill_colormap();
 
+#ifndef NUKLEAR
     /*
      * Initialize the double buffering routine.
      */
@@ -544,6 +545,7 @@ int Colors_init(void)
     Colors_init_radar_hack();
 
     Colors_init_bitmaps();
+#endif
 
     return 0;
 }
@@ -555,6 +557,7 @@ int Colors_init(void)
  */
 static void Colors_init_radar_hack(void)
 {
+#ifndef NUKLEAR
     int				i, p;
 
     for (p = 0; p < 2; p++) {
@@ -572,6 +575,7 @@ static void Colors_init_radar_hack(void)
 	    }
 	}
     }
+#endif
 }
 
 
@@ -641,6 +645,7 @@ void Colors_init_style_colors(void)
  */
 int Colors_init_bitmaps(void)
 {
+#ifndef NUKLEAR
     /* kps hack */
     if (dbuf_state == NULL)
 	return 0;
@@ -661,6 +666,7 @@ int Colors_init_bitmaps(void)
 
     Colors_init_style_colors();
 
+#endif
     return (fullColor) ? 0 : -1;
 }
 
@@ -997,6 +1003,7 @@ void Colors_debug(void)
  */
 void Init_spark_colors(void)
 {
+#ifndef NUKLEAR
     char		buf[MSG_LEN];
     char		*src, *dst;
     unsigned		col;
@@ -1042,6 +1049,7 @@ void Init_spark_colors(void)
     }
     for (i = num_spark_colors; i < MAX_COLORS; i++)
 	spark_color[i] = spark_color[num_spark_colors - 1];
+#endif
 }
 
 

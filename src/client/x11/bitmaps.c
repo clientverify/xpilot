@@ -100,7 +100,7 @@ int Bitmaps_init(void)
 	pixmap.scalable = (i == BM_LOGO
 			   || i == BM_SCORE_BG) ? false : true;
 	pixmap.state = BMS_UNINITIALIZED;
-	STORE(xp_pixmap_t, pixmaps, num_pixmaps, max_pixmaps, pixmap);
+	STORE_UNMODIFIED(xp_pixmap_t, pixmaps, num_pixmaps, max_pixmaps, pixmap);
     }
 
     return 0;
@@ -126,7 +126,7 @@ int Bitmap_add(const char *filename, int count, bool scalable)
     pixmap.count = count;
     pixmap.scalable = scalable;
     pixmap.state = BMS_UNINITIALIZED;
-    STORE(xp_pixmap_t, pixmaps, num_pixmaps, max_pixmaps, pixmap);
+    STORE_UNMODIFIED(xp_pixmap_t, pixmaps, num_pixmaps, max_pixmaps, pixmap);
     return num_pixmaps - 1;
 }
 
@@ -473,13 +473,13 @@ static int Bitmap_create_begin(Drawable d, xp_pixmap_t * pm, int bmp)
 	pm->bitmaps[bmp].mask = None;
     }
 
-    if (!(pixmap = XCreatePixmap(dpy, d, pm->width, pm->height, dispDepth))) {
+    if (!(pixmap = NUKI(XCreatePixmap)(dpy, d, pm->width, pm->height, dispDepth))) {
 	error("Could not create pixmap");
 	return -1;
     }
     pm->bitmaps[bmp].bitmap = pixmap;
 
-    if (!(pixmap = XCreatePixmap(dpy, d, pm->width, pm->height, 1))) {
+    if (!(pixmap = NUKI(XCreatePixmap)(dpy, d, pm->width, pm->height, 1))) {
 	error("Could not create mask pixmap");
 	return -1;
     }
@@ -497,7 +497,7 @@ static int Bitmap_create_begin(Drawable d, xp_pixmap_t * pm, int bmp)
 	values =
 	    GCLineWidth | GCLineStyle | GCCapStyle | GCJoinStyle |
 	    GCGraphicsExposures;
-	maskGC = XCreateGC(dpy, pixmap, values, &xgc);
+	maskGC = NUKI(XCreateGC)(dpy, pixmap, values, &xgc);
     }
 
     return 0;

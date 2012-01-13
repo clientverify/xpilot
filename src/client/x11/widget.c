@@ -1224,6 +1224,7 @@ static void Widget_inside(XEvent *event, int widget_desc, bool inside)
 
 int Widget_event(XEvent *event)
 {
+#ifndef NUKLEAR
     int			i,
 			count;
     widget_t		*widget;
@@ -1329,6 +1330,7 @@ int Widget_event(XEvent *event)
 	    }
 	}
     }
+#endif
     return 0;
 }
 
@@ -1383,7 +1385,7 @@ int Widget_create_form(int parent_desc, Window parent_window,
 	parent_window = parent_widget->window;
     }
     window =
-	XCreateSimpleWindow(dpy, parent_window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[windowColor].pixel);
@@ -1417,7 +1419,7 @@ int Widget_create_activate(int parent_desc,
     activw->callback = callback;
     activw->user_data = user_data;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[buttonColor].pixel);
@@ -1462,7 +1464,7 @@ int Widget_create_bool(int parent_desc,
     boolw->callback = callback;
     boolw->user_data = user_data;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[buttonColor].pixel);
@@ -1527,7 +1529,7 @@ int Widget_add_pulldown_entry(int menu_desc, const char *str,
 	}
 	pull_width = menu_widget->width + 2;
 	pull_height = menu_widget->height + 2;
-	window = XCreateWindow(dpy,
+	window = NUKI(XCreateWindow)(dpy,
 			       DefaultRootWindow(dpy),
 			       0, 0,
 			       pull_width, pull_height,
@@ -1570,7 +1572,7 @@ int Widget_add_pulldown_entry(int menu_desc, const char *str,
 	pull_width = width + 2;
     Widget_resize(pulldown_desc, pull_width, pull_height);
     window =
-	XCreateSimpleWindow(dpy, pulldown_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, pulldown_widget->window,
 			    0, pullw->num_children * (menu_widget->height + 1),
 			    width, height,
 			    1, colors[borderColor].pixel,
@@ -1612,7 +1614,7 @@ int Widget_create_menu(int parent_desc,
     menuw->str = str;
     menuw->pulldown_desc = NO_WIDGET;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[buttonColor].pixel);
@@ -1656,7 +1658,7 @@ int Widget_create_int(int parent_desc,
     intw->callback = callback;
     intw->user_data = user_data;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[BLACK].pixel);
@@ -1700,7 +1702,7 @@ int Widget_create_color(int parent_desc, int color,
     colorw->user_data = user_data;
     
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[color].pixel,
 			    colors[color].pixel);
@@ -1744,7 +1746,7 @@ int Widget_create_double(int parent_desc,
     doublew->callback = callback;
     doublew->user_data = user_data;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[BLACK].pixel);
@@ -1788,7 +1790,7 @@ int Widget_create_label(int parent_desc,
     labelw->y_offset = (height - (textFont->ascent + textFont->descent)) / 2;
     
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[windowColor].pixel);
@@ -1832,7 +1834,7 @@ int Widget_create_colored_label(int parent_desc,
     labelw->y_offset = (height - (textFont->ascent + textFont->descent)) / 2;
     
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[bord].pixel,
 			    colors[bg].pixel);
@@ -1871,7 +1873,7 @@ static int Widget_create_arrow(widget_type_t type, int parent_desc,
     arroww->inside = false;
     arroww->widget_desc = related_desc;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[BLACK].pixel);
@@ -1934,7 +1936,7 @@ int Widget_create_popup(int width, int height, int border,
 	sattr.colormap = colormap;
 	mask |= CWColormap;
     }
-    window = XCreateWindow(dpy,
+    window = NUKI(XCreateWindow)(dpy,
 			   DefaultRootWindow(dpy),
 			   x, y,
 			   width, height,
@@ -2116,7 +2118,7 @@ static int Widget_create_slider(int parent_desc, widget_type_t slider_type,
     sliderw->pressed = false;
     sliderw->viewer_desc = viewer_desc;
     window =
-	XCreateSimpleWindow(dpy, parent_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, parent_widget->window,
 			    x, y, width, height,
 			    border, colors[borderColor].pixel,
 			    colors[BLACK].pixel);
@@ -2376,14 +2378,14 @@ int Widget_create_viewer(const char *buf, int len,
     viewerw->line = NULL;
     viewerw->font = font;
     viewerw->overlay =
-	XCreateSimpleWindow(dpy, popup_widget->window,
+	NUKI(XCreateSimpleWindow)(dpy, popup_widget->window,
 			    0, 0, viewer_width, viewer_height,
 			    0, colors[borderColor].pixel,
 			    colors[windowColor].pixel);
     XSelectInput(dpy, viewerw->overlay, 0);
     Widget_bit_gravity(viewerw->overlay, NorthWestGravity);
     window =
-	XCreateSimpleWindow(dpy, viewerw->overlay,
+	NUKI(XCreateSimpleWindow)(dpy, viewerw->overlay,
 			    0, 0, viewer_width, viewer_height,
 			    0, colors[borderColor].pixel,
 			    colors[windowColor].pixel);

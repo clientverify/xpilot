@@ -117,6 +117,7 @@ int DrawShadowText(Display *display, Window w, GC gc,
 
 void Expose_about_window(void)
 {
+#ifndef NUKLEAR
     int	i, y, old_y, box_start, box_end, first, last;
 
     XClearWindow(dpy, aboutWindow);
@@ -282,11 +283,13 @@ void Expose_about_window(void)
 	error("Unkown page number %d\n", about_page);
 	break;
     }
+#endif
 }
 
 
 static void About_create_window(void)
 {
+#ifndef NUKLEAR
     const unsigned int		windowWidth = ABOUT_WINDOW_WIDTH,
 				buttonWindowHeight = 2*BTN_BORDER
 				    + buttonFont->ascent + buttonFont->descent,
@@ -312,7 +315,7 @@ static void About_create_window(void)
     mask |= CWBackingStore;
 
     aboutWindow
-	= XCreateWindow(dpy,
+	= NUKI(XCreateWindow)(dpy,
 			DefaultRootWindow(dpy),
 			0, 0,
 			windowWidth, windowHeight,
@@ -325,7 +328,7 @@ static void About_create_window(void)
 
     textWidth = XTextWidth(buttonFont, "CLOSE", 5);
     about_close_b
-	= XCreateSimpleWindow(dpy, aboutWindow,
+	= NUKI(XCreateSimpleWindow)(dpy, aboutWindow,
 			      BORDER,
 			      (int)(windowHeight - BORDER
 				    - buttonWindowHeight - 4),
@@ -339,7 +342,7 @@ static void About_create_window(void)
      */
     textWidth = XTextWidth(buttonFont, "PREV", 4);
     about_prev_b
-	= XCreateSimpleWindow(dpy, aboutWindow,
+	= NUKI(XCreateSimpleWindow)(dpy, aboutWindow,
 			      (int)(windowWidth / 2
 				    - BTN_BORDER - textWidth / 2),
 			      (int)(windowHeight
@@ -350,7 +353,7 @@ static void About_create_window(void)
 
     textWidth = XTextWidth(buttonFont, "NEXT", 4);
     about_next_b
-	= XCreateSimpleWindow(dpy, aboutWindow,
+	= NUKI(XCreateSimpleWindow)(dpy, aboutWindow,
 			      (int)(windowWidth - BORDER
 				    - 2*BTN_BORDER - textWidth),
 			      (int)(windowHeight - BORDER
@@ -370,6 +373,7 @@ static void About_create_window(void)
     Expose_about_window();
 
     XMapSubwindows(dpy, aboutWindow);
+#endif
 }
 
 

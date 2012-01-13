@@ -510,7 +510,7 @@ void Handle_X_options(void)
 
     if (strlen(keyboardName) == 0)
 	kdpy = NULL;
-    else if ((kdpy = XOpenDisplay(keyboardName)) == NULL)
+    else if ((kdpy = NUKI(XOpenDisplay)(keyboardName)) == NULL)
 	fatal("Can't open keyboard '%s'.", keyboardName);
 
     /* handle visual */
@@ -560,9 +560,11 @@ bool Set_scaleFactor(xp_option_t *opt, double val)
     clData.scale = 1.0 / val;
     clData.fscale = (float)clData.scale;
     /* Resize removed because it is not needed here */
+#ifndef KLEEIFY_EVENTS
     Scale_dashes();
     Config_redraw();
     Bitmap_update_scale();
+#endif
     return true;
 }
 
@@ -579,7 +581,7 @@ xp_keysym_t String_to_xp_keysym(/*const*/ char *str)
     xp_keysym_t xpks;
 
     assert(str);
-    if ((ks = XStringToKeysym(str)) == NoSymbol)
+    if ((ks = NUKI(XStringToKeysym)(str)) == NoSymbol)
 	return XP_KS_UNKNOWN;
     else {
 	xpks = (xp_keysym_t)ks;

@@ -73,7 +73,7 @@ int Rectangle_add(int color, int x, int y, int width, int height)
     t.width = WINSCALE(width);
     t.height = WINSCALE(height);
 
-    STORE(XRectangle, rect_ptr[color], num_rect[color], max_rect[color], t);
+    STORE_UNMODIFIED(XRectangle, rect_ptr[color], num_rect[color], max_rect[color], t);
     return 0;
 }
 
@@ -126,7 +126,7 @@ int Arc_add(int color,
 
     t.angle1 = angle1;
     t.angle2 = angle2;
-    STORE(XArc, arc_ptr[color], num_arc[color], max_arc[color], t);
+    STORE_UNMODIFIED(XArc, arc_ptr[color], num_arc[color], max_arc[color], t);
     return 0;
 }
 
@@ -150,7 +150,7 @@ int Arc_add_rgb(unsigned long color,
 
     t.arc.angle1 = angle1;
     t.arc.angle2 = angle2;
-    STORE(rgb_arc_t, rgb_arc_ptr, num_rgb_arc, max_rgb_arc, t);
+    STORE_UNMODIFIED(rgb_arc_t, rgb_arc_ptr, num_rgb_arc, max_rgb_arc, t);
     return 0;
 }
 
@@ -184,7 +184,7 @@ int Segment_add(int color, int x_1, int y_1, int x_2, int y_2)
     t.y1 = WINSCALE(y_1);
     t.x2 = WINSCALE(x_2);
     t.y2 = WINSCALE(y_2);
-    STORE(XSegment, seg_ptr[color], num_seg[color], max_seg[color], t);
+    STORE_UNMODIFIED(XSegment, seg_ptr[color], num_seg[color], max_seg[color], t);
     return 0;
 }
 

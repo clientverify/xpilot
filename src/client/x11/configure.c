@@ -649,6 +649,7 @@ void Config_resize(void)
 
 void Config_redraw(void)
 {
+#ifndef NUKLEAR
     int i;
 
     if (!config_mapped)
@@ -656,6 +657,7 @@ void Config_redraw(void)
 
     for (i = 0; i < Nelem_config_creator(); i++)
 	Widget_draw(config_widget_ids[i]);
+#endif
 }
 
 void Config_init(void)
@@ -666,10 +668,10 @@ void Config_init(void)
 	xp_option_t *opt = Option_by_index(i);
 
 	if (Option_get_flags(opt) & XP_OPTFLAG_CONFIG_COLORS) {
-	    STORE(int, color_option_indices,
+	    STORE_UNMODIFIED(int, color_option_indices,
 		  num_color_options, max_color_options, i);
 	} else if (Option_get_flags(opt) & XP_OPTFLAG_CONFIG_DEFAULT) {
-	    STORE(int, default_option_indices,
+	    STORE_UNMODIFIED(int, default_option_indices,
 		  num_default_options, max_default_options, i);
 	}
     }
