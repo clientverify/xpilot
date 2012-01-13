@@ -71,19 +71,6 @@ void xpinfo(const char *fmt, ...)
     va_end(ap);
 }
 
-#ifdef KLEE 
-void warn(const char *fmt, ...)
-{	
-    printf("WARNING: %s\n", fmt);
-}
-
-void error(const char *fmt, ...)
-{
-    printf("ERROR: %s\n", fmt);
-}
-
-#else
-
 void warn(const char *fmt, ...)
 {
     size_t len;
@@ -125,7 +112,6 @@ void error(const char *fmt, ...)
 
     va_end(ap);
 }
-#endif
 
 void fatal(const char *fmt, ...)
 {

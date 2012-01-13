@@ -26,8 +26,6 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#include "klee.h" /* rcochran */
-
 #ifdef _WINDOWS
 #ifndef	_WINSOCKAPI_
 #include <winsock.h>
@@ -140,8 +138,7 @@ typedef struct {
  * The goal is to keep the number of malloc/realloc calls low
  * while not wasting too much memory because of over-allocation.
  */
-/* rcochran - the unmodified STORE macro */
-#define STORE_UNMODIFIED(T,P,N,M,V)						\
+#define STORE(T,P,N,M,V)						\
     if (N >= M && ((M <= 0)						\
 	? (P = (T *) malloc((M = 1) * sizeof(*P)))			\
 	: (P = (T *) realloc(P, (M += M) * sizeof(*P)))) == NULL) {	\
@@ -149,44 +146,6 @@ typedef struct {
 	exit(1);							\
     } else								\
 	(P[N++] = V)
-
-#if 0
-#define STORE_UNMODIFIED(T,P,N,M,V)				        \
-    if (N >= M && ((M <= 0)						\
-	? (P = (T *) malloc((M = 1) * sizeof(*P)))			\
-	: (P = (T *) realloc(P, (M += M) * sizeof(*P)))) == NULL) {	\
-	error("No memory");						\
-	exit(1);							\
-    } else { \
-      if (g_kleeify_net_packet && klee_is_symbolic(P) == 0) { \
-        KLEE_MAKE_SYMBOLIC_PTR(P); \
-        KLEE_MAKE_SYMBOLIC_VAR(N); \
-      } \
-      (P[N++] = V); \
-    }
-#endif
-
-
-/* rcochran - print when allocating memory to discover max array sizes */
-/*
-#define STORE(T,P,N,M,V)						\
-	if (N >= M) printf("STORE: " #T " " #P " %d\n", M);		\
-	STORE_UNMODIFIED(T,P,N,M,V)
-*/
-/*
-#define STORE(T,P,N,M,V)						\
-	if (N >= M) {							\
-	printf("%s:%d Not enough memory for " #T " " #P \
-	      "[%d], max = %d\n", __FILE__, __LINE__, N, M);		\
-	exit(1); }							\
-	(P[N++] = V)
-*/
-
-#define STORE(T,P,N,M,V)						\
-  STORE_UNMODIFIED(T,P,N,M,V)						\
-
-/* rcochran */
-
 /*
  * Macro to make room in a given dynamic array for new elements.
  * P is the pointer to the array memory.
@@ -222,27 +181,16 @@ typedef struct {
     N = 0;
 
 #ifndef PAINT_FREE
-# define PAINT_FREE	1 /* rcochran - disabled */
+# define PAINT_FREE	1
 #endif
 #if PAINT_FREE
-
-//# define RELEASE(P, N, M)					\
-//do {								\
-//	if (!(N)) ; else (free(P), (M) = 0, (N) = 0);		\
-//} while (0)
-//#else
-//# define RELEASE(P, N, M)	((N) = 0)
-//#endif
-
 # define RELEASE(P, N, M)					\
 do {								\
-	if (!(N)) ; else (free(P), (M) = 0, (N) = 0, (P) = 0);	\
+	if (!(N)) ; else (free(P), (M) = 0, (N) = 0);		\
 } while (0)
 #else
 # define RELEASE(P, N, M)	((N) = 0)
 #endif
-
-
 
 
 typedef struct {
@@ -631,15 +579,6 @@ extern int	lose_item_active;	/* one of the lose keys is pressed */
 /* mapdata accessible to outside world */
 
 extern int	        num_playing_teams;
-
-/* rcochran - added extern declarations for variables from client.c */
-extern double       teamscores[MAX_TEAMS];
-extern cannontime_t *cannons;
-extern int          num_cannons;
-extern target_t     *targets;
-extern int          num_targets;
-/* rcochran - end */
-
 
 extern fuelstation_t	*fuels;
 extern int		num_fuels;

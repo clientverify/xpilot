@@ -313,22 +313,13 @@ int max_keydefs = 0;
  * should call some handler. The function should be called until it returns
  * KEY_DUMMY.
  */
-// rcochran - allow reset of key_index to reduce state
-static int generic_lookup_key_index = 0;
-void Generic_lookup_key_reset() {
-  generic_lookup_key_index = 0;
-}
-
 keys_t Generic_lookup_key(xp_keysym_t ks, bool reset)
 {
     keys_t ret = KEY_DUMMY;
-    //static int i = 0;
-    int i = generic_lookup_key_index;
+    static int i = 0;
 
-    if (reset) {
-        generic_lookup_key_index = 0;
+    if (reset)
 	i = 0;
-    }
 
     /*
      * Variable 'i' is already initialized.
@@ -342,7 +333,6 @@ keys_t Generic_lookup_key(xp_keysym_t ks, bool reset)
 	}
     }
 
-    generic_lookup_key_index = i;
     return ret;
 }
 
@@ -837,9 +827,8 @@ static void Parse_xpilotrc_line(const char *line)
 
     t.opt = opt;
     t.comment = comment;
-    STORE_UNMODIFIED(xpilotrc_line_t,
+    STORE(xpilotrc_line_t,
 	  xpilotrc_lines, num_xpilotrc_lines, max_xpilotrc_lines, t);
-    /* rcochran */
     num_ok_options++;
     XFREE(lcpy);
     return;
@@ -852,9 +841,8 @@ static void Parse_xpilotrc_line(const char *line)
     XFREE(comment);
     t.opt = NULL;
     t.comment = xp_safe_strdup(line);
-    STORE_UNMODIFIED(xpilotrc_line_t,
+    STORE(xpilotrc_line_t,
 	  xpilotrc_lines, num_xpilotrc_lines, max_xpilotrc_lines, t);
-    /* rcochran */
     XFREE(lcpy);
 }
 

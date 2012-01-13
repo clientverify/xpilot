@@ -66,9 +66,9 @@ static int		(*receive_tbl[256])(void),
 static int		keyboard_delta;
 static unsigned		magic;
 static time_t           last_send_anything;
-long		        last_keyboard_change; /*rcochran removed static */
-long			last_keyboard_update; /*rcochran removed static*/
-static long		reliable_offset,
+static long		last_keyboard_change,
+			last_keyboard_update,
+			reliable_offset,
 			talk_pending,
 			talk_sequence_num,
 			talk_last_send;
@@ -154,83 +154,6 @@ static void Receive_init(void)
     reliable_tbl[PKT_SCORE_OBJECT] = Receive_score_object;
     reliable_tbl[PKT_TALK_ACK]	= Receive_talk_ack;
 }
-
-/* rcochran - begin */
-static int Receive_tbl_function(int type)
-{
-    int ignore = 0;
-
-#if KLEEIFY_NET_PACKET
-    if (g_kleeify_net_packet) ignore = 1;
-#endif 
-
-    if (type > PKT_DEBRIS && type < PKT_DEBRIS+DEBRIS_TYPES)
-      type = PKT_DEBRIS;
-
-    switch(type) {
-    case PKT_EYES:	DEBUG_PRINTF("PKT_EYES\n"); 		return Receive_eyes();
-    case PKT_TIME_LEFT:	DEBUG_PRINTF("PKT_TIME_LEFT\n"); 	return Receive_time_left();
-    case PKT_AUDIO:	DEBUG_PRINTF("PKT_AUDIO\n"); 		return Receive_audio();
-    case PKT_START:	DEBUG_PRINTF("PKT_START\n"); 		return Receive_start();
-    case PKT_END:	DEBUG_PRINTF("PKT_END\n"); 		return Receive_end();
-    case PKT_SELF:	DEBUG_PRINTF("PKT_SELF\n"); 		return Receive_self();
-    case PKT_DAMAGED:	DEBUG_PRINTF("PKT_DAMAGED\n"); 		return Receive_damaged();
-    case PKT_CONNECTOR:	DEBUG_PRINTF("PKT_CONNECTOR\n"); 	return ignore ? -1 : Receive_connector();
-    case PKT_LASER:	DEBUG_PRINTF("PKT_LASER\n"); 		return ignore ? -1 : Receive_laser();
-    case PKT_REFUEL:	DEBUG_PRINTF("PKT_REFUEL\n"); 		return ignore ? -1 : Receive_refuel();
-    case PKT_SHIP:	DEBUG_PRINTF("PKT_SHIP\n"); 		return ignore ? -1 : Receive_ship();
-    case PKT_ECM:	DEBUG_PRINTF("PKT_ECM\n"); 		return ignore ? -1 : Receive_ecm();
-    case PKT_TRANS:	DEBUG_PRINTF("PKT_TRANS\n"); 		return ignore ? -1 : Receive_trans();
-    case PKT_PAUSED:	DEBUG_PRINTF("PKT_PAUSED\n"); 		return ignore ? -1 : Receive_paused();
-    case PKT_APPEARING:	DEBUG_PRINTF("PKT_APPEARING\n"); 	return ignore ? -1 : Receive_appearing();
-    case PKT_ITEM:	DEBUG_PRINTF("PKT_ITEM\n"); 		return ignore ? -1 : Receive_item();
-    case PKT_MINE:	DEBUG_PRINTF("PKT_MINE\n"); 		return ignore ? -1 : Receive_mine();
-    case PKT_BALL:	DEBUG_PRINTF("PKT_BALL\n"); 		return ignore ? -1 : Receive_ball();
-    case PKT_MISSILE:	DEBUG_PRINTF("PKT_MISSILE\n"); 		return ignore ? -1 : Receive_missile();
-    case PKT_SHUTDOWN:	DEBUG_PRINTF("PKT_SHUTDOWN\n"); 	return Receive_shutdown();
-    case PKT_DESTRUCT:	DEBUG_PRINTF("PKT_DESTRUCT\n"); 	return Receive_destruct();
-    case PKT_SELF_ITEMS:DEBUG_PRINTF("PKT_SELF_ITEMS\n"); 	return Receive_self_items();
-    case PKT_FUEL:	DEBUG_PRINTF("PKT_FUEL\n");		return ignore ? -1 : Receive_fuel();
-    case PKT_CANNON:	DEBUG_PRINTF("PKT_CANNON\n"); 		return Receive_cannon();
-    case PKT_TARGET:	DEBUG_PRINTF("PKT_TARGET\n"); 		return Receive_target();
-    case PKT_RADAR:	DEBUG_PRINTF("PKT_RADAR\n"); 		return ignore ? -1 : Receive_radar();
-    case PKT_FASTRADAR:	DEBUG_PRINTF("PKT_FASTRADAR\n"); 	return ignore ? -1 : Receive_fastradar();
-    case PKT_RELIABLE:	DEBUG_PRINTF("PKT_RELIABLE\n"); 	return ignore ? -1 : Receive_reliable();
-    case PKT_QUIT:	DEBUG_PRINTF("PKT_QUIT\n"); 		return Receive_quit();
-    case PKT_MODIFIERS:	DEBUG_PRINTF("PKT_MODIFIERS\n"); 	return Receive_modifiers();
-    case PKT_FASTSHOT:	DEBUG_PRINTF("PKT_FASTSHOT\n"); 	return ignore ? -1 : Receive_fastshot();
-    case PKT_THRUSTTIME:DEBUG_PRINTF("PKT_THRUSTTIME\n"); 	return Receive_thrusttime();
-    case PKT_SHIELDTIME:DEBUG_PRINTF("PKT_SHIELDTIME\n"); 	return Receive_shieldtime();
-    case PKT_PHASINGTIME:DEBUG_PRINTF("PKT_PHASINGTIME\n"); 	return Receive_phasingtime();
-    case PKT_ROUNDDELAY:DEBUG_PRINTF("PKT_ROUNDDELAY\n"); 	return Receive_rounddelay();
-    case PKT_LOSEITEM:	DEBUG_PRINTF("PKT_LOSEITEM\n"); 	return Receive_loseitem();
-    case PKT_WRECKAGE:	DEBUG_PRINTF("PKT_WRECKAGE\n"); 	return ignore ? -1 : Receive_wreckage();
-    case PKT_ASTEROID:	DEBUG_PRINTF("PKT_ASTEROID\n"); 	return ignore ? -1 : Receive_asteroid();
-    case PKT_WORMHOLE:	DEBUG_PRINTF("PKT_WORMHOLE\n"); 	return ignore ? -1 : Receive_wormhole();
-    case PKT_POLYSTYLE:	DEBUG_PRINTF("PKT_POLYSTYLE\n"); 	return ignore ? -1 : Receive_polystyle();
-    case PKT_DEBRIS:	DEBUG_PRINTF("PKT_DEBRIS\n"); 		return ignore ? -1 : Receive_debris();
-
-    /* reliable types */
-    case PKT_MOTD:	DEBUG_PRINTF("PKT_MOTD\n"); 		return ignore ? -1 : Receive_motd();
-    case PKT_MESSAGE:	DEBUG_PRINTF("PKT_MESSAGE\n");		return ignore ? -1 : Receive_message();
-    case PKT_TEAM_SCORE:DEBUG_PRINTF("PKT_TEAM_SCORE\n"); 	return ignore ? -1 : Receive_team_score();
-    case PKT_PLAYER:	DEBUG_PRINTF("PKT_PLAYER\n");		return ignore ? -1 : Receive_player();
-    case PKT_TEAM:	DEBUG_PRINTF("PKT_TEAM\n"); 		return ignore ? -1 : Receive_team();
-    case PKT_SCORE:	DEBUG_PRINTF("PKT_SCORE\n"); 		return ignore ? -1 : Receive_score();
-    case PKT_TIMING:	DEBUG_PRINTF("PKT_TIMING\n");		return ignore ? -1 : Receive_timing();
-    case PKT_LEAVE:	DEBUG_PRINTF("PKT_LEAVE\n"); 		return ignore ? -1 : Receive_leave();
-    case PKT_WAR:	DEBUG_PRINTF("PKT_WAR\n"); 		return ignore ? -1 : Receive_war();
-    case PKT_SEEK:	DEBUG_PRINTF("PKT_SEEK\n"); 		return ignore ? -1 : Receive_seek();
-    case PKT_BASE:	DEBUG_PRINTF("PKT_BASE\n"); 		return ignore ? -1 : Receive_base();
-    //case PKT_QUIT:	DEBUG_PRINTF("PKT_QUIT\n"); 		return ignore ? -1 : Receive_quit();
-    case PKT_STRING:	DEBUG_PRINTF("PKT_STRING\n");		return ignore ? -1 : Receive_string();
-    case PKT_SCORE_OBJECT:DEBUG_PRINTF("PKT_SCORE_OBJECT\n"); 	return ignore ? -1 : Receive_score_object();
-    case PKT_TALK_ACK:	DEBUG_PRINTF("PKT_TALK_ACK\n");		return ignore ? -1 : Receive_talk_ack();
-    default:		return NULL;
-    //default:		return -1;
-    }
-}
-/* rcochran - end */
 
 /*
  * Uncompress the map which is compressed using a simple
@@ -412,7 +335,6 @@ int Net_setup(void)
 	    if (cbuf.len > 0)
 		continue;
 	    for (retries = 0;; retries++) {
-	      DEBUG("Trying to read setup.  retries = %d\n",retries);
 		if (retries >= 10) {
 		    warn("Can't read setup after %d retries "
 			 "(todo=%d, left=%d)",
@@ -421,7 +343,6 @@ int Net_setup(void)
 		}
 		sock_set_timeout(&rbuf.sock, 2, 0);
 		while (sock_readable(&rbuf.sock) > 0) {
-		  DEBUG("Something in the inner while loop...\n");
 		    Sockbuf_clear(&rbuf);
 		    if (Sockbuf_read(&rbuf) == -1) {
 			error("Can't read all setup data");
@@ -450,7 +371,7 @@ int Net_setup(void)
  * is from the right UDP connection, it already has
  * this info from the ENTER_GAME_pack.
  */
-#define	MAX_VERIFY_RETRIES	50
+#define	MAX_VERIFY_RETRIES	5
 int Net_verify(char *user_name, char *nick_name, char *disp)
 {
     int		n,
@@ -460,7 +381,7 @@ int Net_verify(char *user_name, char *nick_name, char *disp)
     time_t	last;
 
     for (retries = 0;;) {
-	if (retries == 0 || NUK_TIME(NULL) - last >= 3) {
+	if (retries == 0 || time(NULL) - last >= 3) {
 	    if (retries++ >= MAX_VERIFY_RETRIES) {
 		warn("Can't connect to server after %d retries", retries);
 		return -1;
@@ -473,7 +394,7 @@ int Net_verify(char *user_name, char *nick_name, char *disp)
 		error("Can't send verify packet");
 		return -1;
 	    }
-	    NUK_TIME(&last);
+	    time(&last);
 	    if (retries > 1) {
 		printf("Waiting for verify response\n");
 		IFWINDOWS( Progress("Waiting for verify response") );
@@ -513,7 +434,7 @@ int Net_verify(char *user_name, char *nick_name, char *disp)
 	    return -1;
 	}
 	if (result != PKT_SUCCESS) {
-	    warn("Verification failed (%d, 0x%02x)", result, result);
+	    warn("Verification failed (%d)", result);
 	    return -1;
 	}
 	if (Receive_magic() <= 0) {
@@ -544,7 +465,6 @@ int Net_init(char *server, int port)
     size_t		size;
     sock_t		sock;
 
-#ifndef KLEEIFY_NET_FRAME
     assert(server != NULL);
 
 #ifndef _WINDOWS
@@ -592,7 +512,7 @@ int Net_init(char *server, int port)
 
     if (sock_set_receive_buffer_size(&sock, CLIENT_RECV_SIZE + 256) == -1)
 	error("Can't set receive buffer size to %d", CLIENT_RECV_SIZE + 256);
-#endif // KLEEIFY_NET_FRAME // rcochran
+
     size = receive_window_size * sizeof(frame_buf_t);
     if ((Frames = (frame_buf_t *) malloc(size)) == NULL) {
 	error("No memory (%u)", size);
@@ -687,7 +607,6 @@ void Net_cleanup(void)
  */
 void Net_key_change(void)
 {
-	DEBUG_PRINTF("Net_key_change()");
     last_keyboard_change++;
     Key_update();
 }
@@ -703,24 +622,18 @@ int Net_flush(void)
 	return 0;
     }
     if (last_keyboard_ack != last_keyboard_change &&
-			last_keyboard_update != last_loops) {
+	last_keyboard_update != last_loops)
 	/*
 	 * Since 3.2.10: just call Key_update to add our keyboard vector.
 	 * Key_update will call Send_keyboard to flush our buffer.
 	 */
-		DEBUG_PRINTF("Key_update()");
 	return Key_update();
-	}
 
-#ifndef NUKLEAR
-#ifndef KLEEIFY
     Send_talk();
-#endif
-#endif
     if (Sockbuf_flush(&wbuf) == -1)
 	return -1;
     Sockbuf_clear(&wbuf);
-    last_send_anything = NUK_TIME(NULL);
+    last_send_anything = time(NULL);
     return 1;
 }
 
@@ -747,7 +660,7 @@ int Net_start(void)
 
     for (retries = 0;;) {
 	if (retries == 0
-	    || (NUK_TIME(NULL) - last) > 1) {
+	    || (time(NULL) - last) > 1) {
 	    if (retries++ >= 10) {
 		warn("Can't start play after %d retries", retries);
 		return -1;
@@ -769,7 +682,7 @@ int Net_start(void)
 		error("Can't send start play packet");
 		return -1;
 	    }
-	    NUK_TIME(&last);
+	    time(&last);
 	}
 	if (cbuf.ptr > cbuf.buf)
 	    Sockbuf_advance(&cbuf, cbuf.ptr - cbuf.buf);
@@ -893,75 +806,39 @@ void Net_init_lag_measurement(void)
  * Process a packet which most likely is a frame update,
  * perhaps with some reliable data in it.
  */
-int Net_packet()
+static int Net_packet(void)
 {
     int		type,
 		prev_type = 0,
 		result,
 		replyto,
 		status;
-#if KLEEIFY_NET_PACKET
-    char* rbuf_buf__COPY__;
-    if (g_kleeify_net_packet) {
-      DEBUG_PRINTF("KLEEIFY_NET_PACKET making symbolic rbuf.\n");
-      rbuf.buf = (char*) malloc(CLIENT_RECV_SIZE * sizeof(char));
 
-      //equivalent to KLEE_MAKE_SYMBOLIC_PTR
-      klee_make_symbolic_unknown_size(rbuf.buf, "rbuf.buf");
-
-      rbuf.ptr = rbuf.buf;
-      rbuf.len = CLIENT_RECV_SIZE;
-    }
-#endif
     while (rbuf.buf + rbuf.len > rbuf.ptr) {
 	type = (*rbuf.ptr & 0xFF);
-	DEBUG_PRINTF(djbpackettype2str(type));
+
 	if (receive_tbl[type] == NULL) {
 	    warn("Received unknown packet type (%d, %d), "
 		 "dropping frame.", type, prev_type);
-            DEBUG_PRINTF("XPILOT: Sockbuf_clear().\n");
 	    Sockbuf_clear(&rbuf);
 	    break;
-	} else {
-#ifdef DJB_NETLOG
-	  IFNKLEE(FILE *logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
-	  IFNKLEE(fprintf(logfp,"\tDJB_Got_PACKET of type: %s = %d (0x%x)\n",djbpackettype2str(type),type,type)); /* DJB */
-	  IFNKLEE(fclose(logfp));     /* DJB */
-#endif
-#if KLEEIFY_NET_FRAME
-	  if ((result = (*receive_tbl[type])()) <= 0) { 
-#else
-	  if ((result = Receive_tbl_function(type)) <= 0) { /* rcochran */
-#endif
+	}
+	else if ((result = (*receive_tbl[type])()) <= 0) {
 	    if (result == -1) {
-	      if (type != PKT_QUIT)
-		warn("Processing packet type (%d, %d) failed"/*, type, prev_type */); /* rcochran */
-	      return -1;
+		if (type != PKT_QUIT)
+		    warn("Processing packet type (%d, %d) failed",
+			 type, prev_type);
+		return -1;
 	    }
 	    /* Drop rest of incomplete packet */
-            DEBUG_PRINTF("XPILOT: Drop rest of incomplete packet\n");
-            DEBUG_PRINTF("XPILOT: Sockbuf_clear().\n");
 	    Sockbuf_clear(&rbuf);
 	    break;
-	  }
 	}
-#if KLEEIFY_NET_PACKET
-        if (g_kleeify_net_packet) return 1;
-#endif
 	prev_type = type;
     }
-    
-#if KLEEIFY_NET_PACKET
-        if (g_kleeify_net_packet) return -1;
-#endif
-
-    DEBUG_PRINTF("XPILOT: while (cbuf.buf + cbuf.len > cbuf.ptr)\n");
     while (cbuf.buf + cbuf.len > cbuf.ptr) {
 	type = (*cbuf.ptr & 0xFF);
-	DEBUG_PRINTF(djbpackettype2str(type));
 	if (type == PKT_REPLY) {
-            DEBUG_PRINTF("XPILOT: Receive_reply().\n");
-            IFKLEE(printf("type == PKT_REPLY: Not supported in KLEE. \n"); exit(1));
 	    if ((result = Receive_reply(&replyto, &status)) <= 0) {
 		if (result == 0)
 		    break;
@@ -986,11 +863,7 @@ int Net_packet()
 	    printf("\n");
 	    return -1;
 	}
-#if KLEEIFY_NET_FRAME
 	else if ((result = (*reliable_tbl[type])()) <= 0) {
-#else
-	else if ((result = Receive_tbl_function(type)) <= 0) { /* rcochran */
-#endif
 	    if (result == 0)
 		break;
 	    return -1;
@@ -1166,17 +1039,9 @@ static int Net_read(frame_buf_t *frame)
 	/* Peek at the frame loop number. */
 	n = Packet_scanf(&frame->sbuf, "%c%ld", &ch, &loop);
 	/*IFWINDOWS( Trace("Net_read: frame # %d\n", loop) );*/
-	char ll_str[128];
-	sprintf(ll_str, "loop: %d\n", loop);
-	DEBUG_PRINTF(ll_str);
-	if (loop > last_loops) 
-	  DEBUG_PRINTF("loop > last_loops");
-	if (loop <= last_loops) 
-	  DEBUG_PRINTF("loop <= last_loops");
 	frame->sbuf.ptr = frame->sbuf.buf;
 	if (n <= 0) {
 	    if (n == -1) {
-		DEBUG_PRINTF("n <= 0, Sockbuf_clear then returning -1.");
 		Sockbuf_clear(&frame->sbuf);
 		return -1;
 	    }
@@ -1184,15 +1049,8 @@ static int Net_read(frame_buf_t *frame)
 	}
 	else if (loop > last_loops) {
 	    frame->loops = loop;
-#ifdef DJB_NETLOG
-	    IFNKLEE(FILE *logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
-	    IFNKLEE(fprintf(logfp,"\tDJB_Net_read_loop: loop=%ld (0x%x)\n",loop,loop));  /* DJB */
-	    IFNKLEE(fclose(logfp));     /* DJB */
-#endif
-	    DEBUG_PRINTF("loop > last_loops, returning 2.");
 	    return 2;
 	} else {
-	  DEBUG_PRINTF("packet out of order... Dropping.");
 	    /*
 	     * Packet out of order.  Drop it.
 	     * We may have already drawn it if it is duplicate.
@@ -1213,15 +1071,6 @@ static int Net_read(frame_buf_t *frame)
  */
 int Net_input(void)
 {
-
-#if KLEEIFY_NET_FRAME
-    if (Frames == NULL) {
-      DEBUG_PRINTF("XPILOT: Initializing Frames." ); 
-      Net_init(NULL, NULL); // Initialize socket data structures.
-      Receive_init(); // Initalize function pointer table.
-    }
-#endif
-
     int		i, j, n;
     int		num_buffered_packets;
     frame_buf_t	*frame,
@@ -1231,12 +1080,10 @@ int Net_input(void)
     time_t      time_now;
 
     for (i = 0; i < receive_window_size; i++) {
-	DEBUG_PRINTF("begin loop.");
 	frame = &Frames[i];
 	if (!frame)
 	    continue;
 	if (frame->loops != 0) {
-            DEBUG_PRINTF("XPILOT: Already contains a frame." );
 	    /*
 	     * Already contains a frame.
 	     */
@@ -1244,7 +1091,6 @@ int Net_input(void)
 		oldest_frame = frame;
 	}
 	else if (frame->sbuf.len > 0 && frame->sbuf.ptr == frame->sbuf.buf) {
-            DEBUG_PRINTF("XPILOT: Unidentifiable packet." );
 	    /*
 	     * Contains an unidentifiable packet.
 	     * No more input until this one is processed.
@@ -1254,21 +1100,15 @@ int Net_input(void)
 	    /*
 	     * Empty buffer.  Read a frame.
 	     */
-            DEBUG_PRINTF("XPILOT: Net_read()." );
 	    if ((n = Net_read(frame)) <= 0) {
 		if (n == 0) {
-		    DEBUG_PRINTF("No more new packets available.\n" );
 		    /* No more new packets available. */
-		    if (i == 0) {
-			DEBUG_PRINTF("No frames to be processed, return 0.\n" );
+		    if (i == 0)
 			/* No frames to be processed. */
 			return 0;
-		    }
 		    break;
-		} else {
-		    DEBUG_PRINTF("n <= 0, returning n.\n" );
+		} else
 		    return n;
-		}
 	    }
 	    else if (n == 1) {
 		/*
@@ -1280,7 +1120,6 @@ int Net_input(void)
 		/*
 		 * Check for duplicate packets.
 		 */
-		DEBUG_PRINTF("Checking for duplicate packets." );
 		for (j = i - 1; j >= 0; j--) {
 		    if (frame->loops == Frames[j].loops)
 			break;
@@ -1289,10 +1128,7 @@ int Net_input(void)
 		    /*
 		     * Duplicate.  Drop it.
 		     */
-                    DEBUG_PRINTF("XPILOT: Duplicate.  Drop it.\n" ); /* rcochran */
-                    DEBUG_PRINTF("XPILOT: Net_measurement().\n" ); /* rcochran */
 		    Net_measurement(frame->loops, PACKET_DROP);
-                    DEBUG_PRINTF("XPILOT: Sockbuf_clear().\n" ); /* rcochran */
 		    Sockbuf_clear(&frame->sbuf);
 		    frame->loops = 0;
 		    i--;	/* correct for for loop increment. */
@@ -1302,8 +1138,7 @@ int Net_input(void)
 		    oldest_frame = frame;
 	    }
 	}
-#ifndef KLEE // KLEE is too slow to allow dropping of old packets!
-	if ( (i == receive_window_size - 1 && i > 0)
+	if ((i == receive_window_size - 1 && i > 0)
 #if 0
 	    || drawPending
 	    || (ThreadedDraw &&
@@ -1322,10 +1157,7 @@ int Net_input(void)
 		*oldest_frame = *frame;
 		*frame = tmpframe;
 	    }
-            DEBUG_PRINTF("XPILOT: Drop oldest packet. \n" ); /* rcochran */
-            DEBUG_PRINTF("XPILOT: Net_measurement().\n" ); /* rcochran */
 	    Net_measurement(frame->loops, PACKET_DROP);
-            DEBUG_PRINTF("XPILOT: Sockbuf_clear().\n" ); /* rcochran */
 	    Sockbuf_clear(&frame->sbuf);
 	    frame->loops = 0;
 	    oldest_frame = &Frames[0];
@@ -1335,7 +1167,6 @@ int Net_input(void)
 	    i = -1;	/* correct for for loop increment. */
 	    continue;
 	}
-#endif
     }
 
     /*
@@ -1388,7 +1219,6 @@ int Net_input(void)
     /*
      * Process the packet.
      */
-    DEBUG_PRINTF("XPILOT: Net_packet().\n"); /* rcochran */
     n = Net_packet();
 
     if (last_frame != oldest_frame) {
@@ -1399,7 +1229,6 @@ int Net_input(void)
 	*oldest_frame = *last_frame;
 	*last_frame = tmpframe;
     }
-    DEBUG_PRINTF("XPILOT: Sockbuf_clear().\n"); /* rcochran */
     Sockbuf_clear(&last_frame->sbuf);
     last_frame->loops = 0;
     rbuf = last_frame->sbuf;
@@ -1413,11 +1242,10 @@ int Net_input(void)
      * or if we haven't sent anything for a while (keepalive)
      * then we send our current keyboard state.
      */
-    time_now = NUK_TIME(NULL);
+    time_now = time(NULL);
     if ((last_keyboard_ack != last_keyboard_change
 	    && last_keyboard_update /*+ 1*/ < last_loops)
 	|| time_now - last_send_anything > 5) {
-        DEBUG_PRINTF("XPILOT: Key_update().\n"); /* rcochran */
 	Key_update();
 	last_send_anything = time_now;
     } else
@@ -1441,11 +1269,10 @@ int Receive_start(void)
     long	loops_num;
     u_byte	ch;
     long	key_ack;
-    long	kbseq_ack;
 
     if ((n = Packet_scanf(&rbuf,
-			  "%c%ld%ld%ld",
-			  &ch, &loops_num, &key_ack, &kbseq_ack)) <= 0)
+			  "%c%ld%ld",
+			  &ch, &loops_num, &key_ack)) <= 0)
 	return n;
 
     if (last_loops >= loops_num) {
@@ -1602,18 +1429,6 @@ int Receive_self_items(void)
     n = Packet_scanf(&rbuf, "%c%u", &ch, &mask);
     if (n <= 0)
 	return n;
-
-#ifdef KLEEIFY_NET_PACKET
-    // Running klee on the following for block enumerates 2^21 possible paths
-    // due to the 21 item mask. We instead skip that section and log the
-    // numItems array on the server. num_items is declared symbolic so that a
-    // path for this packet type will still occur.
-    if (g_kleeify_net_packet) {
-      klee_make_symbolic_unknown_size(num_items, "num_items");
-      Handle_self_items(num_items);
-      return (rbuf.ptr - rbuf_ptr_start);
-    }
-#endif
 
     memset(num_items, 0, sizeof num_items);
     for (i = 0; mask != 0; i++) {
@@ -2432,16 +2247,11 @@ int Receive_reliable(void)
     if ((n = Packet_scanf(&rbuf, "%c%hd%ld%ld",
 			  &ch, &len, &rel, &rel_loops)) == -1)
 	return -1;
-#ifdef DJB_NETLOG
-    IFNKLEE(FILE *logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
-    IFNKLEE(fprintf(logfp,"\tReceive_reliable: len=%hd,rel=%ld,rel_loops=%ld\n", len, rel, rel_loops));     /* DJB */
-    IFNKLEE(fclose(logfp));     /* DJB */
-#endif
     if (n == 0) {
 	warn("Incomplete reliable data packet");
 	return 0;
     }
-#ifdef DEBUG_
+#ifdef DEBUG
     if (reliable_offset >= rel + len)
 	printf("Reliable my=%ld pkt=%ld len=%d loops=%ld\n",
 	       reliable_offset, rel, len, rel_loops);
@@ -2493,12 +2303,6 @@ int Receive_reliable(void)
 	Sockbuf_advance(&rbuf, rbuf.ptr - rbuf.buf);
 	return -1;
     }
-#ifdef DJB_NETLOG
-    IFNKLEE(logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
-    IFNKLEE(fprintf(logfp,"\tDJB_reliably_received: packet type is:  %s\n",
-	    djbpackettype2str(cbuf.ptr[0])));     /* DJB */
-    IFNKLEE(fclose(logfp));     /* DJB */
-#endif
     reliable_offset += len;
     rbuf.ptr += len;
     Sockbuf_advance(&rbuf, rbuf.ptr - rbuf.buf);
@@ -2526,35 +2330,17 @@ int Receive_reply(int *replyto, int *result)
 
 int Send_keyboard(u_byte *keyboard_vector)
 {
-  kbseq++;
-
-#ifdef KLEEIFY
-    /* rcochran - g_klee_sent_keyv indicates within a generic constraint that a
-     * keyboard update was sent on this particular path */ 
-    g_klee_sent_keyv = 1; 
-#endif 
     int		size = KEYBOARD_SIZE;
 
     if (wbuf.size - wbuf.len < size + 1 + 4)
 	/* Not enough write buffer space for keyboard state */
 	return 0;
-#ifdef DJB_NETLOG
-    IFNKLEE(FILE *logfp = fopen(NETWORK_LOGFILE,"a"));     /* DJB */
-    IFNKLEE(fprintf(logfp,"\tSend_keyboard() PKT_KEYBOARD=%c,last_keyboard_change=%ld,ackedloops=%ld", PKT_KEYBOARD, last_keyboard_change,last_loops));     /* DJB */
-    IFNKLEE(fclose(logfp));     /* DJB */
-#endif
-
-    Packet_printf(&wbuf, "%c%ld%ld", PKT_KEYBOARD, last_keyboard_change,last_loops); /* DJB: Added last_loops */
-
+    Packet_printf(&wbuf, "%c%ld", PKT_KEYBOARD, last_keyboard_change);
     memcpy(&wbuf.buf[wbuf.len], keyboard_vector, (size_t)size);
     wbuf.len += size;
     last_keyboard_update = last_loops;
-//#ifndef KLEEIFY
-
-
-    //Net_keyboard_track();
-    //Send_talk();
-//#endif
+    Net_keyboard_track();
+    Send_talk();
     if (Sockbuf_flush(&wbuf) == -1) {
 	error("Can't send keyboard update");
 	return -1;
@@ -2715,9 +2501,6 @@ int Send_display(int width, int height, int sparks, int spark_colors)
 	last_loops != 0) {
 	return 0;
     }
-    #ifdef NUKLEAR
-    spark_colors=4;
-    #endif
 
     if (Packet_printf(&wbuf, "%c%hd%hd%c%c", PKT_DISPLAY,
 		      width_wanted, height_wanted,

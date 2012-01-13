@@ -68,7 +68,7 @@ static void Talk_create_window(void)
      * Create talk window.
      */
     talkWindow
-	= NUKI(XCreateSimpleWindow)(dpy, drawWindow,
+	= XCreateSimpleWindow(dpy, drawWindow,
 			      TALK_WINDOW_X, TALK_WINDOW_Y,
 			      TALK_WINDOW_WIDTH, TALK_WINDOW_HEIGHT,
 			      TALK_OUTSIDE_BORDER, colors[WHITE].pixel,
@@ -394,7 +394,7 @@ int Talk_do_event(XEvent *event)
 
     case KeyPress:
 	/* 'strange' keys exist */
-	if ((keysym = NUKI(XLookupKeysym)(&event->xkey, 0)) == NoSymbol)
+	if ((keysym = XLookupKeysym(&event->xkey, 0)) == NoSymbol)
 	    break;
 
 	/* 'unprintables'? */
@@ -478,8 +478,6 @@ int Talk_do_event(XEvent *event)
 	    } /* for */
 	    break; /* out of 'KeyPress' */
 	} /* XLookupString() == NoSymbol */
-
-        Generic_lookup_key_reset(); // rcochran
 
 	/*
 	 * printable or a <ctrl-char>

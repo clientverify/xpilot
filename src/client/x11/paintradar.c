@@ -221,7 +221,7 @@ void Paint_sliding_radar(void)
 	if (radarPixmap2 != radarWindow)
 	    return;
 
-	radarPixmap2 = NUKI(XCreatePixmap)(dpy, radarWindow,
+	radarPixmap2 = XCreatePixmap(dpy, radarWindow,
 				256, RadarHeight,
 				dispDepth);
 	radarPixmap = radarPixmap2;

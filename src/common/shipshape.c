@@ -1145,9 +1145,7 @@ shipshape_t *Parse_shape_str(char *str)
     else
 	verboseShapeParsing = true;
     shapeLimits = true;
-
-    //return do_parse_shape(str);
-    return Default_ship(); /* rcochran return default, string parsing causes errors in nuklear */
+    return do_parse_shape(str);
 }
 
 shipshape_t *Convert_shape_str(char *str)

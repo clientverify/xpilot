@@ -55,26 +55,10 @@ time_t			serverStartTime = 0;
 
 static void Handle_signal(int sig_no);
 
-/* RAC begin */
-/* This function is needed to support socket code common to both the client and
- * the server. There is never any simulated packet loss on the server. */
-bool is_simulated_loss() { return false; }
-/* RAC end */
-
 int main(int argc, char **argv)
 {
-  seedMT( 4357U ); /* RAC seed with a constant value */
-  //seedMT( (unsigned)time(NULL) * Get_process_id());
-  
-  isserver = 1;
-  keydb_init(&kdb);
-  ackedmsgdb_init(&srvamdb);
-  ackedmsgdb_init(&cliamdb);
-
     int timer_tick_rate;
     char *addr;
-
-    djbensuredirexists(PACKET_LOGDIR);
 
     /* world is a global now */
     world = &World;
@@ -220,11 +204,6 @@ int main(int argc, char **argv)
 
 void Main_loop(void)
 {
-  //djbsleep(0);     /* DJB */
-  //FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
-  //fprintf(logfp,"\t\tDJB_wctimed_spin(1)\n");     /* DJB */
-  //fclose(logfp);     /* DJB */
-
     struct timeval tv1, tv2;
     double t1, t2;
 
@@ -368,93 +347,10 @@ int End_game(void)
     Free_shots();
     World_free();
     Free_cells();
+    Free_options();
     Log_game("END");
 
     sock_cleanup();
-
-	int c2s_cnt=0, s2c_cnt=0, dc2s_cnt=0; /* RAC message loss stats */
-
-    //#define LOGLEVEL DEBUG
-    printf("\nLast thing ever.\n");
-    // Walk the kdb, logging as needed
-    int size = keydb_sizeof(&kdb)-1;
-    int i = 0;
-    KTest kt;
-    kt.numObjects = size;
-    kt.objects = (KTestObject *)malloc(size*sizeof(KTestObject));
-    kt.numArgs = 0;
-    kt.args = NULL;
-
-    keydb_print(&kdb);
-    int flc, idx;
-    for (flc=0; flc<kdb.currsize; flc++) {
-      idx = (kdb.curridx+flc) % kdb.arrsize;
-      DEBUG("flc = %d [0,%d], i = %d, size = %d\n",flc,kdb.currsize-1,i,size);
-      if (kdb.vals[idx].type == 0) {
-	DEBUG("r->kbseq = %d (0x%x)\n",kdb.vals[idx].ID,kdb.vals[idx].ID);
-	if (kdb.vals[idx].ID != 0) {
-	  struct ackedmsg *am = ackedmsgdb_popmsg(&cliamdb,kdb.vals[idx].ID);
-	  if (am == NULL) {
-					dc2s_cnt++;
-#ifdef NUKLEAR_NO_PACKET_LOSS
-            checkdie(0, "Go fuck yahself. No dropped packets round here.");
-#endif
-					int am_size = -1;
-					if (am) am_size = am->size;
-					WARNING("DC2S:  ID = %d, idx = %d, loopID=%d, am->size=%d\n",
-						kdb.vals[idx].ID, idx, kdb.vals[idx].loopID,am_size);
-					kt.objects[i].name = "dc2s";
-					kt.objects[i].numBytes = 4;
-					unsigned char *temp = (unsigned char *)malloc(4);
-					INTTOUCP(temp,kdb.vals[idx].loopID);
-					kt.objects[i].bytes = temp;
-
-	  } else {
-					c2s_cnt++;
-	    DEBUG("row:  ID = %d\n",kdb.vals[idx].ID);
-	    IFDEBUG(ackedmsg_print(am);)
-	    kt.objects[i].name = "c2s";
-	    kt.objects[i].numBytes = am->size+4;
-	    unsigned char *temp = (unsigned char *)malloc(am->size+4);
-	    INTTOUCP(temp,kdb.vals[idx].loopID);
-	    memcpy(temp+4,am->msg,am->size);
-	    kt.objects[i].bytes = temp;
-	    ackedmsg_free(am);
-	  }
-	  i++;
-	}
-      } else if (kdb.vals[idx].type == 1) {
-			s2c_cnt++;
-	DEBUG("frame:  ID = %d\n",kdb.vals[idx].ID);
-	//printf("\tframe: %d (0x%x)\n",kdb.vals[idx].ID,kdb.vals[idx].ID);
-	struct ackedmsg *am = ackedmsgdb_popmsg(&srvamdb,kdb.vals[idx].ID);
-	checkdie(am != NULL, "popped a null frame message!");
-	//ackedmsg_print(am);
-	kt.objects[i].name = "s2c";
-	kt.objects[i].numBytes = am->size+4;
-	unsigned char *temp = (unsigned char *)malloc(am->size+4);
-	INTTOUCP(temp,kdb.vals[idx].loopID);
-	memcpy(temp+4,am->msg,am->size);
-	kt.objects[i].bytes = temp;
-	ackedmsg_free(am);
-	i++;
-      } else {
-	checkdie(0,"type must be 0 or 1");
-      }
-    }
-    DEBUG("...\n");
-    DEBUG("size = %d\n",size);
-
-	INFO("\tKtest file: %s\n", options.ktestFileName);
-	int result = kTest_toFile(&kt, options.ktestFileName);
-	INFO("\tWriting file returns: %d\n",result);
-
-	DEBUG("frame:  ID = %d\n",kdb.vals[idx].ID);
-
-	INFO("c2s: %d, s2c: %d, dc2s: %d\n", c2s_cnt, s2c_cnt, dc2s_cnt);
-
-	Free_options(); /* RAC - moved to end of function */
-
     exit (0);
 }
 

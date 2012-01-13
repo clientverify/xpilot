@@ -56,11 +56,6 @@ int Check_view_dimensions(void)
     width_wanted = (int)(draw_width * clData.scaleFactor + 0.5);
     height_wanted = (int)(draw_height * clData.scaleFactor + 0.5);
 
-#ifdef NUKLEAR
-    width_wanted = HACK_WIDTH_WANTED;
-    height_wanted = HACK_HEIGHT_WANTED;
-#endif
-
     srv_width = width_wanted;
     srv_height = height_wanted;
     LIMIT(srv_height, MIN_VIEW_SIZE, MAX_VIEW_SIZE);

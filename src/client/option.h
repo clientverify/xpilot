@@ -142,7 +142,6 @@ struct xp_option {
 
 /* number of options in global option array */
 extern int num_options;
-extern int max_options; /* rcochran */
 extern xp_option_t *options;
 
 extern void Parse_options(int *argcp, char **argvp);
@@ -353,7 +352,6 @@ typedef int xp_keysym_t;
 /* no const because of mfc client */
 extern xp_keysym_t String_to_xp_keysym(/*const*/ char *str);
 extern keys_t Generic_lookup_key(xp_keysym_t ks, bool reset);
-void Generic_lookup_key_reset(); //rcochran
 
 typedef struct {
     xp_keysym_t	keysym;

@@ -101,7 +101,7 @@
 
 #ifndef _WINDOWS
 
-#  ifdef DEBUG_
+#  ifdef DEBUG
 #    define D(x)	x ;  fflush(stdout);
 #  else
 #    define D(x)
@@ -110,7 +110,7 @@
 #else /* _WINDOWS */
 
 #  ifdef _DEBUG
-#    define DEBUG_	1
+#    define DEBUG	1
 #    define D(x)	x
 #  else
 #    define D(x)

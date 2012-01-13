@@ -26,7 +26,7 @@
 #include "xpcommon.h"
 
 /* Debug macro */
-#ifdef DEBUG_
+#ifdef DEBUG
 # define DEB(x) x
 #else
 # define DEB(x)
@@ -223,9 +223,6 @@ int sock_open_tcp(sock_t *sock)
 
 int sock_set_non_blocking(sock_t *sock, int flag)
 {
-#ifdef NUKLEAR
-    return SOCK_IS_OK;
-#endif
 /*
  * There are some problems on some particular systems (suns) with
  * getting sockets to be non-blocking.  Just try all possible ways
@@ -346,7 +343,11 @@ int sock_open_tcp_connected_non_blocking(sock_t *sock, char *host, int port)
     if (connect(sock->fd, (struct sockaddr *)&dest,
 		sizeof(struct sockaddr_in)) < 0) {
 
+#ifndef _WINDOWS
   	if (errno != EINPROGRESS) {
+#else
+ 	if (WSAGetLastError() != 10035) {
+#endif
 
 		sock_set_error(sock, errno, SOCK_CALL_CONNECT, __LINE__);
 		sock_close(sock);
@@ -475,67 +476,13 @@ char * sock_get_last_name(sock_t *sock)
 
 int sock_read(sock_t *sock, char *buf, int len)
 {
-  int			count;
+    int			count;
 
-#ifdef KLEEIFY_NET_FRAME
-  printf("Oh, crap.\n");
-  count = recv(0, buf, len, 0);
-#else
-
-  DEBUG("SOCK_READ\n");
-  //*
-  unsigned char *bigbuf = (unsigned char *)malloc(len);
-  count = recv(sock->fd, bigbuf, len, 0);
-  if (count < 0) {
-    sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
-    return count;
-  }
-    
-  if (isserver) {
-    count = keydb_srvhandlerecv(bigbuf,buf,count,&kdb,&cliamdb);
-  } else {
-    count = keydb_clihandlerecv(bigbuf,buf,count,&kdb,cliloopID);
-  }
-  free(bigbuf);
-    
-    /*  } else
-  {
     count = recv(sock->fd, buf, len, 0);
-    }/**/
-#endif
-  if (count < 0) {
-    sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
-  } else {
+    if (count < 0)
+	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
 
-    /* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-    //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-    int flc;
-    FILE *logfp = fopen(NETWORK_LOGFILE,"a");
-    fprintf(logfp,"<");
-    //fwrite(&count,sizeof(count),1,logfp);
-    fprintf(logfp,"%d ",count);
-    for (flc=0; flc<count; flc++) {
-      fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-      /*fprintf(logfp,"%c",(unsigned char)buf[flc]);
-	if ((unsigned char)buf[flc] > 31 &&
-	(unsigned char)buf[flc] < 127) {
-	printf("(%c) ",(unsigned char)buf[flc]);
-	}*/
-    }
-    fprintf(logfp,"\n");
-    fclose(logfp);
-#endif
-#endif
-#endif
-    /* DJB */
-
-  }
-  DEBUG_PRINTF("XPILOT: exiting sock_read().\n");
-
-  return count;
+    return count;
 }
 
 int sock_receive_any(sock_t *sock, char *buf, int len)
@@ -546,52 +493,10 @@ int sock_receive_any(sock_t *sock, char *buf, int len)
     if (sock_alloc_lastaddr(sock))
 	return SOCK_IS_ERROR;
     addrlen = sizeof(struct sockaddr_in);
-
-    DEBUG("SOCK_RECEIVE_ANY\n");
-    //*
-    unsigned char *bigbuf = (unsigned char *)malloc(len);
-
-    count = recvfrom(sock->fd, bigbuf, len, 0,(struct sockaddr *)(sock->lastaddr), &addrlen);
-
-    if (isserver) {
-      count = keydb_srvhandlerecv(bigbuf,buf,count,&kdb,&cliamdb);
-    } else {
-      count = keydb_clihandlerecv(bigbuf,buf,count,&kdb,cliloopID);
-    }
-    free(bigbuf);
-
-    if (count < 0) {
-      sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
-    } else {
-
-/* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-// TODO: Change to only record on client or server?
-// TODO: Try replaying streams?
-// TODO: Mark sender/receiver?  What about server logging for multiple clients?  Or do we only care about the client data?
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
-      fprintf(logfp,"<");
-      //fwrite(&count,sizeof(count),1,logfp);
-      fprintf(logfp,"%d ",count);
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-	/*fprintf(logfp,"%c",(unsigned char)buf[flc]);
-	  if ((unsigned char)buf[flc] > 31 &&
-	  (unsigned char)buf[flc] < 127) {
-	  printf("(%c) ",(unsigned char)buf[flc]);
-	  }*/
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
-/* DJB */
-    }
+    count = recvfrom(sock->fd, buf, len, 0,
+		     (struct sockaddr *)(sock->lastaddr), &addrlen);
+    if (count < 0)
+	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
 
     return count;
 }
@@ -616,52 +521,10 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
 	    = ((struct in_addr *)(hp->h_addr_list[0]))->s_addr;
     }
 
-    int			count2=0, count3=0;
-
-    DEBUG("SOCK_SEND_DEST\n");
-    //*
-    int bigbuflen;
-    unsigned char *bigbuf;
-    if (isserver) {
-      bigbuf = keydb_srvhandlesend(buf, len, &bigbuflen, &count, &kdb, &srvamdb);
-    } else {
-      bigbuf = keydb_clihandlesend(buf, len, &bigbuflen, &count, &kdb, cliloopID);
-      //count = sendto(sock->fd, buf, len, 0,
-      //	     (struct sockaddr *) &dest, sizeof(dest));
-    }
-    count2 = sendto(sock->fd, bigbuf, bigbuflen, 0,(struct sockaddr *) &dest, sizeof(dest));
-      
-    free(bigbuf);
-    if (count < 0) {
+    count = sendto(sock->fd, buf, len, 0,
+		   (struct sockaddr *) &dest, sizeof(dest));
+    if (count < 0)
 	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
-    } else {
-
-/* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
-      fprintf(logfp,">");
-      //fwrite(&count,sizeof(count),1,logfp);
-      fprintf(logfp,"%d ",count);      
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-	/*fprintf(logfp,"%c",(unsigned char)buf[flc]);
-	  if ((unsigned char)buf[flc] > 31 &&
-	  (unsigned char)buf[flc] < 127) {
-	  printf("(%c) ",(unsigned char)buf[flc]);
-	  }*/
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
-/* DJB */
-
-    }
 
     return count;
 }
@@ -669,60 +532,10 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
 int sock_write(sock_t *sock, char *buf, int len)
 {
     int			count;
-    int			count2=0;
 
-    DEBUG("SOCK_WRITE\n");
-	
-    int bigbuflen;
-    unsigned char *bigbuf;
-
-    if (isserver) {
-      bigbuf = keydb_srvhandlesend(buf, len, &bigbuflen, &count, &kdb, &srvamdb);
-    } else {
-      bigbuf = keydb_clihandlesend(buf, len, &bigbuflen, &count, &kdb, cliloopID);
-    }
-
-#ifndef KLEE
-#ifndef NUKLEAR
-  if (is_simulated_loss()) 
-		count2 = bigbuflen;
-	else
-#endif
-#endif
-    count2 = send(sock->fd, bigbuf, bigbuflen, 0);
-
-    // TODO: count2 <0 check?
-	
-    free(bigbuf);
-    if (count < 0) {
+    count = send(sock->fd, buf, len, 0);
+    if (count < 0)
 	sock_set_error(sock, errno, SOCK_CALL_IO, __LINE__);
-
-/* DJB */
-	} else {
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
-      fprintf(logfp,">");
-      //fwrite(&count,sizeof(count),1,logfp);
-      fprintf(logfp,"%d ",count);
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-	/*fprintf(logfp,"%c",(unsigned char)buf[flc]);
-	  if ((unsigned char)buf[flc] > 31 &&
-	  (unsigned char)buf[flc] < 127) {
-	  printf("(%c) ",(unsigned char)buf[flc]);
-	  }*/
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
-/* DJB */
-    }
 
     return count;
 }
@@ -903,9 +716,6 @@ int sock_set_timeout(sock_t *sock, int seconds, int useconds)
 
 int sock_readable(sock_t *sock)
 {
-#ifdef NUKLEAR
-    return 1;
-#endif
     int			n;
     fd_set		readfds;
     struct timeval	timeout;
@@ -926,9 +736,8 @@ int sock_readable(sock_t *sock)
 	return SOCK_IS_OK;
     }
 
-    if ((n > 0) && FD_ISSET(sock->fd, &readfds)) {
+    if ((n > 0) && FD_ISSET(sock->fd, &readfds))
 	return 1;
-    }
 
     return SOCK_IS_OK;
 }

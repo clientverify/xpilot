@@ -26,7 +26,6 @@
  */
 
 #include "xpclient_x11.h"
-#include <X11/Xlib.h>
 
 bool	titleFlip;		/* Do special title bar flipping? */
 
@@ -209,7 +208,7 @@ static bool Set_fontName(xp_option_t *opt, const char *val)
 xp_option_t xdefault_options[] = {
     XP_BOOL_OPTION(
 	"fullColor",
-	false, /* rcochran - disable fullColor by default */
+	true,
 	&fullColor,
 	Set_fullColor,
 	XP_OPTFLAG_CONFIG_DEFAULT,
@@ -499,15 +498,8 @@ void Handle_X_options(void)
 	    Set_option("display", DISPLAY_DEF, xp_option_origin_default);
     }
 
-    if ((dpy = NUKI(XOpenDisplay)(displayName)) == NULL)
+    if ((dpy = XOpenDisplay(displayName)) == NULL)
 	fatal("Can't open display '%s'.", displayName);
-
-    DEBUG_PRINTF("declaring external memory...");
-    KLEE_EXTERNAL_MEM(Display, dpy);
-    KLEE_EXTERNAL_MEM(Screen, ScreenOfDisplay(dpy, DefaultScreen(dpy)));
-    KLEE_EXTERNAL_MEM(Visual, DefaultVisual(dpy, DefaultScreen(dpy)));
-    //KLEE_EXTERNAL_MEM(Screen, XScreenOfDisplay(dpy, DefaultScreen(dpy)));
-    //KLEE_EXTERNAL_MEM(Visual, XDefaultVisualOfScreen(XScreenOfDisplay(dpy, DefaultScreen(dpy))));
 
     /* handle keyboard */
     assert(keyboardName);
@@ -518,7 +510,7 @@ void Handle_X_options(void)
 
     if (strlen(keyboardName) == 0)
 	kdpy = NULL;
-    else if ((kdpy = NUKI(XOpenDisplay)(keyboardName)) == NULL)
+    else if ((kdpy = XOpenDisplay(keyboardName)) == NULL)
 	fatal("Can't open keyboard '%s'.", keyboardName);
 
     /* handle visual */
@@ -568,11 +560,9 @@ bool Set_scaleFactor(xp_option_t *opt, double val)
     clData.scale = 1.0 / val;
     clData.fscale = (float)clData.scale;
     /* Resize removed because it is not needed here */
-#ifndef KLEEIFY_EVENTS
     Scale_dashes();
     Config_redraw();
     Bitmap_update_scale();
-#endif
     return true;
 }
 
@@ -589,7 +579,7 @@ xp_keysym_t String_to_xp_keysym(/*const*/ char *str)
     xp_keysym_t xpks;
 
     assert(str);
-    if ((ks = NUKI(XStringToKeysym)(str)) == NoSymbol)
+    if ((ks = XStringToKeysym(str)) == NoSymbol)
 	return XP_KS_UNKNOWN;
     else {
 	xpks = (xp_keysym_t)ks;

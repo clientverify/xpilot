@@ -25,8 +25,7 @@
 
 #include "xpcommon.h"
 
-// rcochran
-//#ifndef HAVE_STRLCPY
+#ifndef HAVE_STRLCPY
 /*
     NAME
 	strlcpy
@@ -61,10 +60,9 @@ size_t strlcpy(char *dest, const char *src, size_t size)
 	s++;
     return (s - src);
 }
-//#endif
+#endif
 
-// rcochran
-//#ifndef HAVE_STRLCAT
+#ifndef HAVE_STRLCAT
 /*
     NAME
 	strlcat
@@ -103,5 +101,5 @@ size_t strlcat(char *dest, const char *src, size_t size)
 	s++;
     return dlen + (s - src);
 }
-//#endif
+#endif
 

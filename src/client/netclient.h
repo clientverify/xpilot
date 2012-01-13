@@ -61,11 +61,6 @@ extern int pointer_move_next;
 extern long last_keyboard_ack;
 extern bool dirPrediction;
 
-extern long last_keyboard_change; /* rcochran */
-extern long last_keyboard_update; /* rcochran */
-extern BITV_DECL(keyv, NUM_KEYS); /* rcochran */
-extern unsigned char keyv_new[NUM_KEYS]; /* rcochran */
-
 int Net_setup(void);
 int Net_verify(char *real, char *nick, char *dpy);
 int Net_init(char *server, int port);

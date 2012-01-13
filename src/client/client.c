@@ -25,8 +25,6 @@
 
 #include "xpclient.h"
 
-/* rcochran - added "= NULL" to all variables ending in _ptr */
-
 client_data_t	clData = { 0, };
 
 char	*geometry;
@@ -158,14 +156,11 @@ int	clientPortEnd = 0;	/* Last one (these are for firewalls) */
 byte	lose_item;		/* index for dropping owned item */
 int	lose_item_active;	/* one of the lose keys is pressed */
 
-/* rcochran - removed static from the variables in this commment block so that
- * they can be accessed from other files. */
-double       teamscores[MAX_TEAMS];
-cannontime_t *cannons = NULL;
-int          num_cannons = 0;
-target_t     *targets = NULL;
-int          num_targets = 0;
-/* rcochran - end */
+static double       teamscores[MAX_TEAMS];
+static cannontime_t *cannons = NULL;
+static int          num_cannons = 0;
+static target_t     *targets = NULL;
+static int          num_targets = 0;
 
 fuelstation_t       *fuels = NULL;
 int                 num_fuels = 0;
@@ -182,47 +177,39 @@ int                 num_polygon_styles = 0;
 
 score_object_t      score_objects[MAX_SCORE_OBJECTS];
 int                 score_object = 0;
-
-#ifdef NUKLEAR
-other_t             Others_array[8];
-int                 num_others = 0, max_others = 64;
-other_t             *Others = Others_array;
-#else
 other_t             *Others = NULL;
 int                 num_others = 0, max_others = 0;
-#endif
-
-refuel_t            *refuel_ptr = NULL;
+refuel_t            *refuel_ptr;
 int                 num_refuel, max_refuel;
-connector_t         *connector_ptr = NULL;
+connector_t         *connector_ptr;
 int                 num_connector, max_connector;
-laser_t             *laser_ptr = NULL;
+laser_t             *laser_ptr;
 int                 num_laser, max_laser;
-missile_t           *missile_ptr = NULL;
+missile_t           *missile_ptr;
 int                 num_missile, max_missile;
-ball_t              *ball_ptr = NULL;
+ball_t              *ball_ptr;
 int                 num_ball, max_ball;
-ship_t              *ship_ptr = NULL;
+ship_t              *ship_ptr;
 int                 num_ship, max_ship;
-mine_t              *mine_ptr = NULL;
+mine_t              *mine_ptr;
 int                 num_mine, max_mine;
-itemtype_t          *itemtype_ptr = NULL;
+itemtype_t          *itemtype_ptr;
 int                 num_itemtype, max_itemtype;
-ecm_t               *ecm_ptr = NULL;
+ecm_t               *ecm_ptr;
 int                 num_ecm, max_ecm;
-trans_t             *trans_ptr = NULL;
+trans_t             *trans_ptr;
 int                 num_trans, max_trans;
-paused_t            *paused_ptr = NULL;
+paused_t            *paused_ptr;
 int                 num_paused, max_paused;
-appearing_t         *appearing_ptr = NULL;
+appearing_t         *appearing_ptr;
 int                 num_appearing, max_appearing;
-radar_t             *radar_ptr = NULL;
+radar_t             *radar_ptr;
 int                 num_radar, max_radar;
-vcannon_t           *vcannon_ptr = NULL;
+vcannon_t           *vcannon_ptr;
 int                 num_vcannon, max_vcannon;
-vfuel_t             *vfuel_ptr = NULL;
+vfuel_t             *vfuel_ptr;
 int                 num_vfuel, max_vfuel;
-vbase_t             *vbase_ptr = NULL;
+vbase_t             *vbase_ptr;
 int                 num_vbase, max_vbase;
 debris_t            *debris_ptr[DEBRIS_TYPES];
 int                 num_debris[DEBRIS_TYPES],
@@ -230,13 +217,13 @@ int                 num_debris[DEBRIS_TYPES],
 debris_t            *fastshot_ptr[DEBRIS_TYPES * 2];
 int                 num_fastshot[DEBRIS_TYPES * 2],
                     max_fastshot[DEBRIS_TYPES * 2];
-vdecor_t            *vdecor_ptr = NULL;
+vdecor_t            *vdecor_ptr;
 int                 num_vdecor, max_vdecor;
-wreckage_t          *wreckage_ptr = NULL;
+wreckage_t          *wreckage_ptr;
 int                 num_wreckage, max_wreckage;
-asteroid_t          *asteroid_ptr = NULL;
+asteroid_t          *asteroid_ptr;
 int                 num_asteroids, max_asteroids;
-wormhole_t          *wormhole_ptr = NULL;
+wormhole_t          *wormhole_ptr;
 int                 num_wormholes, max_wormholes;
 
 int                 num_playing_teams = 0;
@@ -1573,12 +1560,8 @@ int Handle_end(long server_loops)
 {
     end_loops = server_loops;
     snooping = (self && eyesId != self->id) ? true : false;
-#ifndef KLEEIFY_NET_FRAME
     update_timing();    
-#endif
-#ifndef KLEE_DISABLE_PAINT
     Paint_frame();
-#endif
 #ifdef SOUND
     audioUpdate();
 #endif
@@ -1593,17 +1576,11 @@ int Handle_self_items(u_byte *newNumItems)
 
 static void update_status(int status)
 {
-  /*
-#ifdef KLEEIFY_NET_FRAME
-  return;
-#endif
-*/
     static int old_status = 0;
-#ifndef KLEEIFY_NET_PACKET
+
     if (BIT(old_status, OLD_GAME_OVER) && !BIT(status, OLD_GAME_OVER)
 	&& !BIT(status, OLD_PAUSE))
 	Raise_window();
-#endif
 
     /* Player appeared? */
     if (BIT(old_status, OLD_PLAYING|OLD_PAUSE|OLD_GAME_OVER) != OLD_PLAYING) {
@@ -1646,14 +1623,7 @@ int Handle_self(int x, int y, int vx, int vy, int newHeading,
 	packet_size -= 16;
     else
 	packet_size = newPacketSize;
-
-#if KLEEIFY_NET_PACKET
-    if (!g_kleeify_net_packet)
-      update_status(status);
-#else
     update_status(status);
-#endif
-
     return 0;
 }
 
@@ -1900,7 +1870,6 @@ int Handle_item(int x, int y, int type)
 
 int Handle_fastshot(int type, u_byte *p, int n)
 {
-#ifndef NUKLEAR
 #define num_		(num_fastshot[type])
 #define max_		(max_fastshot[type])
 #define ptr_		(fastshot_ptr[type])
@@ -1908,12 +1877,10 @@ int Handle_fastshot(int type, u_byte *p, int n)
 #undef num_
 #undef max_
 #undef ptr_
-#endif
 }
 
 int Handle_debris(int type, u_byte *p, int n)
 {
-#ifndef NUKLEAR
 #define num_		(num_debris[type])
 #define max_		(max_debris[type])
 #define ptr_		(debris_ptr[type])
@@ -1921,7 +1888,6 @@ int Handle_debris(int type, u_byte *p, int n)
 #undef num_
 #undef max_
 #undef ptr_
-#endif
 }
 
 int Handle_wreckage(int x, int y, int wrecktype, int size, int rotation)
@@ -2038,17 +2004,10 @@ int Handle_fastradar(int x, int y, int size)
 
 int Handle_radar(int x, int y, int size)
 {
-#ifdef KLEEIFY_NET_FRAME
-    return Handle_fastradar
-	((int)((float)(x * RadarWidth) / Setup->width + 0.5),
-	 (int)((float)(y * RadarHeight) / Setup->height + 0.5),
-	 size);
-#else
     return Handle_fastradar
 	((int)((double)(x * RadarWidth) / Setup->width + 0.5),
 	 (int)((double)(y * RadarHeight) / Setup->height + 0.5),
 	 size);
-#endif
 }
 
 int Handle_message(char *msg)
@@ -2102,12 +2061,8 @@ int Handle_message(char *msg)
 
 int Handle_time_left(long sec)
 {
-#ifndef KLEE
-    if (sec >= 0 && sec < 10 && (time_left > sec || sec == 0)){
+    if (sec >= 0 && sec < 10 && (time_left > sec || sec == 0))
 	Play_beep();
-
-    }
-#endif
     time_left = (sec >= 0) ? sec : 0;
     return 0;
 }
@@ -2206,10 +2161,8 @@ int Client_setup(void)
 
     RadarHeight = (RadarWidth * Setup->height) / Setup->width;
 
-//#ifndef NUKLEAR
     if (Init_playing_windows() == -1)
 	return -1;
-//#endif
 
     if (Alloc_msgs() == -1)
 	return -1;
@@ -2276,10 +2229,8 @@ void Client_cleanup(void)
 	for (i = 0; i < num_others; i++) {
 	    other_t* other = &Others[i];
 	    Free_ship_shape(other->ship);
-      }
-#ifndef NUKLEAR
+	}
 	free(Others);
-#endif
 	num_others = 0;
 	max_others = 0;
     }
@@ -2421,7 +2372,6 @@ int Client_check_pointer_move_interval(void)
  */
 void Client_exit(int status)
 {
-    input_events_cleanup();
     Net_cleanup();
     Client_cleanup();
     exit(status);
