@@ -40,6 +40,7 @@ static void Disable_emulate3buttons(bool disable, void* display);
  */ 
 static void Disable_emulate3buttons(bool disable, void* display)
 {
+  return;
 #ifdef HAVE_XF86MISC
 #if 1
     /* kps - Lets not try to disable emulate3buttons. Some users have buggy
