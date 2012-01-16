@@ -84,6 +84,18 @@ static void Tune_tagGame(void)
 static void Check_baseless(void);
 
 static option_desc opts[] = {
+/* RAC begin */
+    { /* commandline option to specify ktest output file */
+	"ktestFileName",
+	"ktestFileName",
+	"ktest.out",
+	&options.ktestFileName,
+	valString,
+	tuner_none,
+	"KTestFileName!\n",
+	OPT_COMMAND 
+    },
+/* RAC end */
     {
 	"help",
 	"help",

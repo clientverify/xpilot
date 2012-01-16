@@ -376,6 +376,11 @@ void Destroy_connection(connection_t *connp, const char *reason)
     sock = &connp->w.sock;
     remove_input(sock->fd);
 
+    PLOGSTART(1+MIN(strlen(reason)+1,sizeof(pkt)-1));
+    PLOGV(UC,PKT_QUIT);
+    PLOGVA(UC,reason,MIN(strlen(reason)+1,sizeof(pkt)-1));
+    PLOGEND;
+	      
     pkt[0] = PKT_QUIT;
     strlcpy(&pkt[1], reason, sizeof(pkt) - 1);
     len = strlen(pkt) + 1;
@@ -1329,6 +1334,11 @@ static void Handle_input(int fd, void *arg)
 
 	type = (connp->r.ptr[0] & 0xFF);
 	recSpecial = 0;
+#ifdef DJB_NETLOG
+	FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+	fprintf(logfp,"\tDJB_Got_PACKET of type: %s = %d (0x%x)\n",djbpackettype2str(type),type,type);     /* DJB */
+	fclose(logfp);     /* DJB */
+#endif
 	result = (*receive_tbl[type])(connp);
 	if (result == -1)
 	    /*
@@ -1458,6 +1468,11 @@ int Send_reply(connection_t *connp, int replyto, int result)
 
 static int Send_modifiers(connection_t *connp, char *mods)
 {
+    PLOGSTART(2+strlen(mods));
+    PLOGV(UC,PKT_MODIFIERS);
+    PLOGVA(UC,mods,strlen(mods)+1);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%s", PKT_MODIFIERS, mods);
 }
 
@@ -1499,6 +1514,9 @@ static int Send_self_items(connection_t *connp, player_t *pl)
 	if (item_mask & (1 << i))
 	    connp->w.buf[connp->w.len++] = pl->item[i];
     }
+
+    PLOG_SELF_ITEMS(item_mask,pl->item);
+
     /* return the number of bytes added to the packet. */
     return 5 + item_count;
 }
@@ -1516,6 +1534,30 @@ int Send_self(connection_t *connp,
 	      char *mods)
 {
     int n;
+
+    PLOGSTART(31);
+    PLOGV(UC,PKT_SELF);
+    PLOGV(HD,CLICK_TO_PIXEL(pl->pos.cx));
+    PLOGV(HD,CLICK_TO_PIXEL(pl->pos.cy));
+    PLOGV(HD,(int) pl->vel.x);
+    PLOGV(HD,(int) pl->vel.y);
+    PLOGV(UC,pl->dir);
+    PLOGV(UC,(int) (pl->power + 0.5));
+    PLOGV(UC,(int) (pl->turnspeed + 0.5));
+    PLOGV(UC,(int) (pl->turnresistance * 255.0 + 0.5));
+    PLOGV(HD,lock_id);
+    PLOGV(HD,lock_dist);
+    PLOGV(UC,lock_dir);
+    PLOGV(UC,pl->check);
+    PLOGV(UC,pl->fuel.current);
+    PLOGV(HD,(int)(pl->fuel.sum + 0.5));
+    PLOGV(HD,(int)(pl->fuel.max + 0.5));
+    PLOGV(HD,connp->view_width);
+    PLOGV(HD,connp->view_height);
+    PLOGV(UC,connp->debris_colors);
+    PLOGV(UC,(uint8_t)status);
+    PLOGV(UC,autopilotlight);
+    PLOGEND;
 
     /* assumes connp->version >= 0x4203 */
     n = Packet_printf(&connp->w,
@@ -1567,6 +1609,11 @@ int Send_leave(connection_t *connp, int id)
 	      connp->state, connp->id);
 	return 0;
     }
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_leave() PKT_LEAVE=%c,id=%hd\n", PKT_LEAVE, id);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->c, "%c%hd", PKT_LEAVE, id);
 }
 
@@ -1585,6 +1632,14 @@ int Send_player(connection_t *connp, int id)
 	return 0;
     }
     Convert_ship_2_string(pl->ship, buf, ext, 0x3200);
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_player() PKT_PLAYER=%c,pl->id=%hd,pl->team=%c,pl->mychar=%c,pl->name=%s,pl->username=%s,pl->hostname=%s,buf=%S\n",
+		      PKT_PLAYER, pl->id,
+		      pl->team, pl->mychar,
+		      pl->name, pl->username, pl->hostname,
+		      buf);     /* DJB */
+#endif
     n = Packet_printf(&connp->c,
 		      "%c%hd" "%c%c" "%s%s%s" "%S",
 		      PKT_PLAYER, pl->id,
@@ -1592,13 +1647,24 @@ int Send_player(connection_t *connp, int id)
 		      pl->name, pl->username, pl->hostname,
 		      buf);
     if (n > 0) {
-	if (!FEATURE(connp, F_EXPLICITSELF))
-	    n = Packet_printf(&connp->c, "%S", ext);
-	else
-	    n = Packet_printf(&connp->c, "%S%c", ext, himself);
-	if (n <= 0)
-	    connp->c.len = sbuf_len;
+      if (!FEATURE(connp, F_EXPLICITSELF)) {
+#ifdef DJB_NETLOG
+	fprintf(logfp,",ext=%S",ext);     /* DJB */
+#endif
+	n = Packet_printf(&connp->c, "%S", ext);
+      } else {
+#ifdef DJB_NETLOG
+	fprintf(logfp,",ext=%S,himself=%c",ext,himself);     /* DJB */
+#endif
+	n = Packet_printf(&connp->c, "%S%c", ext, himself);
+      }
+      if (n <= 0)
+	connp->c.len = sbuf_len;
     }
+#ifdef DJB_NETLOG
+    fprintf(logfp,"\n");     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return n;
 }
 
@@ -1647,6 +1713,13 @@ int Send_score(connection_t *connp, int id, double score,
 		    allchar = '+';
 	    }
 	}
+#ifdef DJB_NETLOG
+	FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+	fprintf(logfp,"\t\tSend_score() PKT_SCORE=%c,id=%hd,score=%d,life=%hd,mychar=%c,allchar=%c\n", PKT_SCORE, id,
+			     (int)(score * 100 + (score > 0 ? 0.5 : -0.5)),
+			     life, mychar, allchar);     /* DJB */
+	fclose(logfp);     /* DJB */
+#endif
 	return Packet_printf(&connp->c, "%c%hd%d%hd%c%c", PKT_SCORE, id,
 			     (int)(score * 100 + (score > 0 ? 0.5 : -0.5)),
 			     life, mychar, allchar);
@@ -1667,6 +1740,12 @@ int Send_timing(connection_t *connp, int id, int check, int round)
     }
     if (is_polygon_map)
 	num_checks = world->NumChecks;
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_timing() PKT_TIMING=%c,id=%hd,round*num_checks+check=%hu\n",PKT_TIMING,
+	    id, round * num_checks + check);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->c, "%c%hd%hu", PKT_TIMING,
 			 id, round * num_checks + check);
 }
@@ -1689,6 +1768,12 @@ int Send_base(connection_t *connp, int id, int num)
  */
 int Send_fuel(connection_t *connp, int num, double fuel)
 {
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_fuel() PKT_FUEL=%c,num=%hu,fuel+.5=%hu\n", PKT_FUEL,
+			 num, (int)(fuel + 0.5));     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->w, "%c%hu%hu", PKT_FUEL,
 			 num, (int)(fuel + 0.5));
 }
@@ -1718,32 +1803,79 @@ int Send_cannon(connection_t *connp, int num, int dead_ticks)
 {
     if (FEATURE(connp, F_POLY))
 	return 0;
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_cannon() PKT_CANNON=%c,num=%hu,dead_ticks=%hu\n", PKT_CANNON, num, dead_ticks);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
+
+    PLOGSTART(5);
+    PLOGV(UC,PKT_CANNON);
+    PLOGV(HD,num);
+    PLOGV(HD,dead_ticks);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hu%hu", PKT_CANNON, num, dead_ticks);
 }
 
 int Send_destruct(connection_t *connp, int count)
 {
+    PLOGSTART(3);
+    PLOGV(UC,PKT_DESTRUCT);
+    PLOGV(HD,count);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd", PKT_DESTRUCT, count);
 }
 
 int Send_shutdown(connection_t *connp, int count, int delay)
 {
+    PLOGSTART(5);
+    PLOGV(UC,PKT_SHUTDOWN);
+    PLOGV(HD,count);
+    PLOGV(HD,delay);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd%hd", PKT_SHUTDOWN,
 			 count, delay);
 }
 
 int Send_thrusttime(connection_t *connp, int count, int max)
 {
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_thrusttime() PKT_THRUSTTIME=%c,count=%hu,max=%hu\n", PKT_CANNON, count, max);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
+
+    PLOGSTART(5);
+    PLOGV(UC,PKT_THRUSTTIME);
+    PLOGV(HD,count);
+    PLOGV(HD,max);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd%hd", PKT_THRUSTTIME, count, max);
 }
 
 int Send_shieldtime(connection_t *connp, int count, int max)
 {
+    PLOGSTART(5);
+    PLOGV(UC,PKT_SHIELDTIME);
+    PLOGV(HD,count);
+    PLOGV(HD,max);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd%hd", PKT_SHIELDTIME, count, max);
 }
 
 int Send_phasingtime(connection_t *connp, int count, int max)
 {
+    PLOGSTART(5);
+    PLOGV(UC,PKT_PHASINGTIME);
+    PLOGV(HD,count);
+    PLOGV(HD,max);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd%hd", PKT_PHASINGTIME, count, max);
 }
 
@@ -1780,6 +1912,13 @@ int Send_wreckage(connection_t *connp, clpos_t pos,
     else
 	wrtype &= ~0x80;
 
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_wreckage() PKT_WRECKAGE=%c,CTP(pos.cx)=%hd,CTP(pos.cy)=%hd,wrtype=%c,size=%c,rot=%c\n", PKT_WRECKAGE,
+			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy),
+			 wrtype, size, rot);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->w, "%c%hd%hd%c%c%c", PKT_WRECKAGE,
 			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy),
 			 wrtype, size, rot);
@@ -1821,6 +1960,11 @@ int Send_fastshot(connection_t *connp, int type, unsigned char *p, unsigned n)
     w->buf[w->len++] = n;
     memcpy(&w->buf[w->len], p, n * 2);
     w->len += n * 2;
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_fastshot()...\n");     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
 
     return n;
 }
@@ -1845,6 +1989,13 @@ int Send_ball(connection_t *connp, clpos_t pos, int id, int style)
 
 int Send_mine(connection_t *connp, clpos_t pos, int teammine, int id)
 {
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_mine() PKT_MINE=%c,CTP(pos.cx)=%hd,CTP(pos.cy)=%hd,teammine=%c,id=%hd\n", PKT_MINE,
+			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy),
+			 teammine, id);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->w, "%c%hd%hd%c%hd", PKT_MINE,
 			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy),
 			 teammine, id);
@@ -1854,6 +2005,14 @@ int Send_target(connection_t *connp, int num, int dead_ticks, double damage)
 {
     if (FEATURE(connp, F_POLY))
 	return 0;
+
+    PLOGSTART(7);
+    PLOGV(UC,PKT_TARGET);
+    PLOGV(HD,num);
+    PLOGV(HD,dead_ticks);
+    PLOGV(HD,(int)(damage * 256.0));
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hu%hu%hu", PKT_TARGET,
 			 num, dead_ticks, (int)(damage * 256.0));
 }
@@ -1877,6 +2036,12 @@ int Send_wormhole(connection_t *connp, clpos_t pos)
 
 int Send_item(connection_t *connp, clpos_t pos, int type)
 {
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tSend_item() PKT_ITEM=%c,CTP(pos.cx)=%hd,CTP(pos.cy)=%hd,type=%c\n", PKT_ITEM,
+			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy), type);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     return Packet_printf(&connp->w, "%c%hd%hd%c", PKT_ITEM,
 			 CLICK_TO_PIXEL(pos.cx), CLICK_TO_PIXEL(pos.cy), type);
 }
@@ -1917,6 +2082,22 @@ int Send_ship(connection_t *connp, clpos_t pos, int id, int dir,
 {
     if (!FEATURE(connp, F_SEPARATEPHASING))
 	cloak |= phased;
+
+    // rcochran: Not logging PKT_SHIP because the client uses STORE macro
+    // when handling this packet type.
+    //PLOGSTART(9);
+    //PLOGV(UC,PKT_SHIP);
+    //PLOGV(HD,CLICK_TO_PIXEL(pos.cx));
+    //PLOGV(HD,CLICK_TO_PIXEL(pos.cy));
+    //PLOGV(HD,id);
+    //PLOGV(UC,dir);
+    //PLOGV(UC,(shield != 0)
+    //      | ((cloak != 0) << 1)
+    //      | ((emergency_shield != 0) << 2)
+    //      | ((phased != 0) << 3)
+    //      | ((deflector != 0) << 4));
+    //PLOGEND;
+
     return Packet_printf(&connp->w,
 			 "%c%hd%hd%hd" "%c" "%c",
 			 PKT_SHIP,
@@ -1991,6 +2172,11 @@ int Send_fastradar(connection_t *connp, unsigned char *buf, unsigned n)
 
 int Send_damaged(connection_t *connp, int damaged)
 {
+    PLOGSTART(2);
+    PLOGV(UC,PKT_DAMAGED);
+    PLOGV(UC,damaged);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%c", PKT_DAMAGED, damaged);
 }
 
@@ -1998,16 +2184,33 @@ int Send_audio(connection_t *connp, int type, int vol)
 {
     if (connp->w.size - connp->w.len <= 32)
 	return 0;
+
+    PLOGSTART(3);
+    PLOGV(UC,PKT_AUDIO);
+    PLOGV(UC,type);
+    PLOGV(UC,vol);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%c%c", PKT_AUDIO, type, vol);
 }
 
 int Send_time_left(connection_t *connp, long sec)
 {
+    PLOGSTART(5);
+    PLOGV(UC,PKT_TIME_LEFT);
+    PLOGV(LD,sec);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%ld", PKT_TIME_LEFT, sec);
 }
 
 int Send_eyes(connection_t *connp, int id)
 {
+    PLOGSTART(3);
+    PLOGV(UC,PKT_EYES);
+    PLOGV(HD,id);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%hd", PKT_EYES, id);
 }
 
@@ -2023,6 +2226,11 @@ int Send_message(connection_t *connp, const char *msg)
 
 int Send_loseitem(connection_t *connp, int lose_item_index)
 {
+    PLOGSTART(2);
+    PLOGV(UC,PKT_LOSEITEM);
+    PLOGV(UC,lose_item_index);
+    PLOGEND;
+
     return Packet_printf(&connp->w, "%c%c", PKT_LOSEITEM, lose_item_index);
 }
 
@@ -2039,9 +2247,32 @@ int Send_start_of_frame(connection_t *connp)
      * which keyboard update we have last received.
      */
     Sockbuf_clear(&connp->w);
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\tSend_start_of_frame() PKT_START=%c,frame_loops=%ld,connp->last_key_change=%ld,connp->kbseq_ack=%ld\n",
+	    PKT_START, frame_loops, connp->last_key_change, connp->kbseq_ack);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
+
+#ifdef DJBLOGGING
+    djbgetframedir(frame_loops);
+#endif
+    PLOGSTART(9);
+    PLOGV(UC,PKT_START);
+    PLOGV(LD,frame_loops);
+    PLOGV(LD,connp->last_key_change);
+
+#ifdef DJB_NETLOG
+    FILE *djblkfp = fopen("interleave","a");
+    fprintf(djblkfp,"INTERLEAVE: Ack: lkc = %d\n",connp->last_key_change);
+    fclose(djblkfp);
+#endif
+
+    PLOGEND;
+
     if (Packet_printf(&connp->w,
-		      "%c%ld%ld",
-		      PKT_START, frame_loops, connp->last_key_change) <= 0) {
+		      "%c%ld%ld%ld",
+		      PKT_START, frame_loops, connp->last_key_change, connp->kbseq_ack) <= 0) {
 	Destroy_connection(connp, "write error");
 	return -1;
     }
@@ -2055,12 +2286,23 @@ int Send_end_of_frame(connection_t *connp)
     int			n;
 
     last_packet_of_frame = 1;
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\tSend_end_of_frame() PKT_END=%c,frame_loops=%ld\n", PKT_END, frame_loops);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
+
+    PLOGSTART(5);
+    PLOGV(UC,PKT_END);
+    PLOGV(LD,frame_loops);
+    PLOGEND;
     n = Packet_printf(&connp->w, "%c%ld", PKT_END, frame_loops);
     last_packet_of_frame = 0;
     if (n == -1) {
 	Destroy_connection(connp, "write error");
 	return -1;
     }
+
     if (n == 0) {
 	/*
 	 * Frame update size exceeded buffer size.
@@ -2091,6 +2333,8 @@ static int Receive_keyboard(connection_t *connp)
 {
     player_t *pl;
     long change;
+    long ackedloops; /* DJB */
+    long kbseq; /* DJB */
     u_byte ch;
     size_t size = KEYBOARD_SIZE;
 
@@ -2100,7 +2344,12 @@ static int Receive_keyboard(connection_t *connp)
 	 */
 	return 0;
 
-    Packet_scanf(&connp->r, "%c%ld", &ch, &change);
+    Packet_scanf(&connp->r, "%c%ld%ld", &ch, &change, &ackedloops); /* DJB: Added ackedloops */
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tReceive_keyboard() ch=%c,change=%ld,ackedloops=%ld",ch,change,ackedloops);     /* DJB */
+#endif
+
     if (change <= connp->last_key_change)
 	/*
 	 * We already have this key.
@@ -2111,9 +2360,34 @@ static int Receive_keyboard(connection_t *connp)
 	connp->last_key_change = change;
 	pl = Player_by_id(connp->id);
 	memcpy(pl->last_keyv, connp->r.ptr, size);
+#ifdef DJB_NETLOG
+	fprintf(logfp,",bitv=");     /* DJB */
+	int djbflc;     /* DJB */
+	for (djbflc = 0; djbflc < NUM_KEYS; djbflc++) {     /* DJB */
+	  if (djbflc % 8 == 0) fprintf(logfp," 0x%02x ",(unsigned char)(pl->last_keyv[djbflc/8]));
+	  fprintf(logfp,"%d",BITV_ISSET(pl->last_keyv,djbflc)?1:0);     /* DJB */
+	}     /* DJB */
+	for (djbflc = 0; djbflc < NUM_KEYS; djbflc++) {     /* DJB */
+	  if (BITV_ISSET(pl->last_keyv,djbflc)) {     /* DJB */
+	    fprintf(logfp,"%s,",djbkeytype2str(djbflc));     /* DJB */
+	  }     /* DJB */
+	}     /* DJB */
+#endif
+
 	connp->r.ptr += size;
 	Handle_keyboard(pl);
     }
+
+    KLOG(ch,change,ackedloops,connp->r.ptr-size,size);
+
+#ifdef DJB_NETLOG
+    FILE *djblkfp = fopen("interleave","a");
+    fprintf(djblkfp,"INTERLEAVE: Got: lkc = %d\n",change);
+    fclose(djblkfp);
+    fprintf(logfp,"\n");     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
+
     if (connp->num_keyboard_updates++ && (connp->state & CONN_PLAYING)) {
 	Destroy_connection(connp, "no macros");
 	return -1;
@@ -2297,6 +2571,17 @@ int Send_reliable(connection_t *connp)
 	    Destroy_connection(connp, "write error");
 	    return -1;
 	}
+#ifdef DJB_NETLOG
+	FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+	fprintf(logfp,"\tSend_reliable() PKT_RELIABLE=%c,len=%hd,rel_off=%ld,main_loops=%ld, read_buf='%s'=",
+		PKT_RELIABLE,len,rel_off,main_loops,read_buf);     /* DJB */
+	int djbflc;     /* DJB */
+	for (djbflc=0; djbflc<len; djbflc++) {     /* DJB */
+	  fprintf(logfp,"0x%02x ", (unsigned char)read_buf[djbflc]);     /* DJB */
+	}     /* DJB */
+	fprintf(logfp,"\n");     /* DJB */
+	fclose(logfp);     /* DJB */
+#endif
 	if ((n = Sockbuf_flushRec(&connp->w)) < len) {
 	    if (n == 0
 		&& (errno == EWOULDBLOCK
@@ -2363,6 +2648,11 @@ static int Receive_ack(connection_t *connp)
 	Destroy_connection(connp, "not ack");
 	return -1;
     }
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tReceive_ack() PKT_ACK=%c,rel=%ld,rel_loops=%ld\n", ch, rel, rel_loops);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     rtt = main_loops - rel_loops;
     if (rtt > 0 && rtt <= MAX_RTT) {
 	/*
@@ -2950,6 +3240,11 @@ static int Receive_pointer_move(connection_t *connp)
 	    Destroy_connection(connp, "read error");
 	return n;
     }
+#ifdef DJB_NETLOG
+    FILE *logfp = fopen(NETWORK_LOGFILE,"a");     /* DJB */
+    fprintf(logfp,"\t\tReceive_pointer_move() ch=%c,movement=%hd (0x%x)\n",ch,movement,movement);     /* DJB */
+    fclose(logfp);     /* DJB */
+#endif
     pl = Player_by_id(connp->id);
 
     /* kps - ??? */
