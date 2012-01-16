@@ -223,7 +223,7 @@ static void Command_help(void)
  * server (connected to server), or false if the player wants to have a
  * look at the next server.
  */
-static bool Process_commands(sockbuf_t *ibuf,
+bool Process_commands(sockbuf_t *ibuf,
 			     int auto_connect, int list_servers,
 			     int auto_shutdown, char *shutdown_reason,
 			     Connect_param_t *conpar)
@@ -432,9 +432,16 @@ static bool Process_commands(sockbuf_t *ibuf,
 		else if (linebuf[1] != '\0')
 		    conpar->team = TEAM_NOT_SET;
 
+#ifdef NUKLEAR
+		Packet_printf(ibuf, "%c%s%s%s%d", ENTER_QUEUE_pack,
+			      conpar->nick_name, conpar->disp_name,
+			      HACK_HOSTNAME, conpar->team);
+#else
+
 		Packet_printf(ibuf, "%c%s%s%s%d", ENTER_QUEUE_pack,
 			      conpar->nick_name, conpar->disp_name,
 			      conpar->host_name, conpar->team);
+#endif
 		time(&qsent);
 		break;
 
