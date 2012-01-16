@@ -84,13 +84,25 @@ double rfrac(void)
     return (double) (randomMT() * 0.00000000023283064365386962890625);
 }
 
+/* rcochran */
+#ifdef FIXED_POINT_MATH
+#include "table_fixed.h"
+#endif 
+/* rcochran */
 
 void Make_table(void)
 {
     int i;
 
     for (i = 0; i < TABLE_SIZE; i++) {
+	/* rcochran */
+#ifdef FIXED_POINT_MATH
+	tbl_sin[i] = tbl_sin_fixed[i];
+	tbl_cos[i] = tbl_cos_fixed[i];
+#else
 	tbl_sin[i] = sin(i * (2.0 * PI / TABLE_SIZE));
 	tbl_cos[i] = cos(i * (2.0 * PI / TABLE_SIZE));
+#endif
+	/* rcochran */
     }
 }

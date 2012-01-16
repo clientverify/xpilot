@@ -479,6 +479,8 @@ int Talk_do_event(XEvent *event)
 	    break; /* out of 'KeyPress' */
 	} /* XLookupString() == NoSymbol */
 
+        Generic_lookup_key_reset(); // rcochran
+
 	/*
 	 * printable or a <ctrl-char>
 	 */

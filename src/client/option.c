@@ -313,13 +313,21 @@ int max_keydefs = 0;
  * should call some handler. The function should be called until it returns
  * KEY_DUMMY.
  */
+/* rcochran - allow reset of key_index to reduce state */
+static int generic_lookup_key_index = 0;
+void Generic_lookup_key_reset() {
+  generic_lookup_key_index = 0;
+}
+
 keys_t Generic_lookup_key(xp_keysym_t ks, bool reset)
 {
     keys_t ret = KEY_DUMMY;
-    static int i = 0;
+    int i = generic_lookup_key_index;
 
-    if (reset)
+    if (reset) {
+        generic_lookup_key_index = 0;
 	i = 0;
+    }
 
     /*
      * Variable 'i' is already initialized.
@@ -333,6 +341,7 @@ keys_t Generic_lookup_key(xp_keysym_t ks, bool reset)
 	}
     }
 
+    generic_lookup_key_index = i;
     return ret;
 }
 

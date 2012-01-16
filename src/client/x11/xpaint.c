@@ -98,6 +98,43 @@ void Paint_frame(void)
     static int		prev_damaged = 0;
     static int		prev_prev_damaged = 0;
 
+#ifdef NUKLEAR
+    RELEASE(radar_ptr, num_radar, max_radar);
+    ///src/client/x11/paintdata.c:62:
+    //RELEASE(rect_ptr[i], num_rect[i], max_rect[i]);
+    ///src/client/x11/paintdata.c:98:	  
+    //RELEASE(arc_ptr[i], num_arc[i], max_arc[i]);
+    ///src/client/x11/paintdata.c:113:
+    //RELEASE(rgb_arc_ptr, num_rgb_arc, max_rgb_arc);
+    ///src/client/x11/paintdata.c:177:
+    //RELEASE(seg_ptr[i], num_seg[i], max_seg[i]);
+    RELEASE(radar_ptr, num_radar, max_radar);
+    RELEASE(itemtype_ptr, num_itemtype, max_itemtype);
+    RELEASE(ball_ptr, num_ball, max_ball);
+    RELEASE(mine_ptr, num_mine, max_mine);
+    ///src/client/paintobjects.c:190:
+    //RELEASE(debris_ptr[i], num_debris[i], max_debris[i]);
+    RELEASE(wreckage_ptr, num_wreckage, max_wreckage);
+    RELEASE(asteroid_ptr, num_asteroids, max_asteroids);
+    RELEASE(wormhole_ptr, num_wormholes, max_wormholes);
+    RELEASE(missile_ptr, num_missile, max_missile);
+    RELEASE(laser_ptr, num_laser, max_laser);
+    ///src/client/paintobjects.c:330:
+    //RELEASE(fastshot_ptr[i], num_fastshot[i], max_fastshot[i]);
+    RELEASE(paused_ptr, num_paused, max_paused);
+    RELEASE(appearing_ptr, num_appearing, max_appearing);
+    RELEASE(ecm_ptr, num_ecm, max_ecm);
+    RELEASE(ship_ptr, num_ship, max_ship);
+    RELEASE(refuel_ptr, num_refuel, max_refuel);
+    RELEASE(connector_ptr, num_connector, max_connector);
+    RELEASE(trans_ptr, num_trans, max_trans);
+    RELEASE(vcannon_ptr, num_vcannon, max_vcannon);
+    RELEASE(vfuel_ptr, num_vfuel, max_vfuel);
+    RELEASE(vbase_ptr, num_vbase, max_vbase);
+    RELEASE(vdecor_ptr, num_vdecor, max_vdecor);
+    return;
+#endif
+
     Paint_frame_start();
     Paint_score_table();
 

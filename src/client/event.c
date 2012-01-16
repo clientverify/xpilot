@@ -153,7 +153,24 @@ int Key_init(void)
 
 int Key_update(void)
 {
-    return Send_keyboard(keyv);
+#ifdef KLEEIFY_EVENTS
+  if (g_kleeify_events) {
+    g_klee_sent_keyv = 1; 
+    last_keyboard_update = last_loops;
+  } else {
+    _BITV_DECL(_keyv, NUM_KEYS);
+    memset(_keyv, 0, sizeof _keyv);
+    int i;
+    for (i=0; i<NUM_KEYS; i++) {
+      if (BITV_ISSET(keyv, i))
+	_BITV_SET(keyv, i);
+    }
+    return Send_keyboard(_keyv);
+  }
+  return 0;
+#else
+  return Send_keyboard(keyv);
+#endif
 }
 
 static bool Key_check_talk_macro(keys_t key)
@@ -173,6 +190,15 @@ static bool Key_press_id_mode(void)
 
 static bool Key_press_autoshield_hack(void)
 {
+    if (BITV_ISSET(keyv, KEY_THRUST)) {
+#ifndef NUKLEAR
+      //NUKLEAR cheat
+      //printf("you shouldn't cheat in round %d.\n", cliloopID);
+      //BITV_SET(keyv, KEY_SHIELD);
+      //return false; /* DJB */
+#endif
+    }
+
     if (auto_shield && BITV_ISSET(keyv, KEY_SHIELD))
 	BITV_CLR(keyv, KEY_SHIELD);
     return false;
@@ -208,7 +234,11 @@ static bool Key_press_swap_settings(void)
     SWAP(turnspeed, turnspeed_s);
     SWAP(turnresistance, turnresistance_s);
     controlTime = CONTROL_TIME;
+#ifndef KLEEIFY_EVENTS
+#ifndef NUKLEAR
     Config_redraw();
+#endif
+#endif
 
     return true;
 }
@@ -225,45 +255,85 @@ static bool Key_press_swap_scalefactor(void)
 
 static bool Key_press_increase_power(void)
 {
+#ifdef KLEEIFY_EVENTS
+    float factor = 1.10;
+    float power_f = power;
+    power_f *= factor;
+    power = power_f;
+    power = MIN(power, MAX_PLAYER_POWER);
+#else
     power = power * 1.10;
     power = MIN(power, MAX_PLAYER_POWER);
     Send_power(power);
 
+#ifndef NUKLEAR
     Config_redraw();
+#endif
+#endif
+
     controlTime = CONTROL_TIME;
     return false;	/* server doesn't see these keypresses anymore */
-
 }
 
 static bool Key_press_decrease_power(void)
 {
+#ifdef KLEEIFY_EVENTS
+    float factor = 1.10;
+    float power_f = power;
+    power_f /= factor;
+    power = power_f;
+    power = MAX(power, MIN_PLAYER_POWER);
+#else
     power = power / 1.10;
     power = MAX(power, MIN_PLAYER_POWER);
     Send_power(power);
 
+#ifndef NUKLEAR
     Config_redraw();
+#endif
+#endif
     controlTime = CONTROL_TIME;
     return false;	/* server doesn't see these keypresses anymore */
 }
 
 static bool Key_press_increase_turnspeed(void)
 {
+#ifdef KLEEIFY_EVENTS
+    float factor = 1.05;
+    float turnspeed_f = turnspeed;
+    turnspeed_f *= factor;
+    turnspeed = turnspeed_f;
+    turnspeed = MIN(turnspeed, MAX_PLAYER_TURNSPEED);
+#else
     turnspeed = turnspeed * 1.05;
     turnspeed = MIN(turnspeed, MAX_PLAYER_TURNSPEED);
     Send_turnspeed(turnspeed);
 
+#ifndef NUKLEAR
     Config_redraw();
+#endif
+#endif
     controlTime = CONTROL_TIME;
     return false;	/* server doesn't see these keypresses anymore */
 }
 
 static bool Key_press_decrease_turnspeed(void)
 {
+#ifdef KLEEIFY_EVENTS
+    float factor = 1.05;
+    float turnspeed_f = turnspeed;
+    turnspeed_f /= factor;
+    turnspeed = turnspeed_f;
+    turnspeed = MAX(turnspeed, MIN_PLAYER_TURNSPEED);
+#else
     turnspeed = turnspeed / 1.05;
     turnspeed = MAX(turnspeed, MIN_PLAYER_TURNSPEED);
     Send_turnspeed(turnspeed);
 
+#ifndef NUKLEAR
     Config_redraw();
+#endif
+#endif
     controlTime = CONTROL_TIME;
     return false;	/* server doesn't see these keypresses anymore */
 }
@@ -272,6 +342,7 @@ static bool Key_press_talk(void)
 {
     int i;
 
+#ifndef NUKLEAR
     /*
      * this releases mouse in x11 client, so we clear the mouse buttons
      * so they don't lock on
@@ -280,7 +351,10 @@ static bool Key_press_talk(void)
 	for (i = 0; i < MAX_POINTER_BUTTONS; i++)
 	    Pointer_button_released(i);
 
+#ifndef KLEEIFY_EVENTS
     Talk_set_state(!clData.talking);
+#endif
+#endif
     return false;	/* server doesn't need to know */
 }
 
@@ -304,7 +378,9 @@ static bool Key_press_pointer_control(void)
 
 static bool Key_press_toggle_fullscreen(void)
 {
+#ifndef KLEEIFY_EVENTS
     Toggle_fullscreen();
+#endif
     return false;	/* server doesn't need to know */
 }
 
@@ -316,7 +392,11 @@ static bool Key_press_toggle_radar_score(void)
 
 static bool Key_press_toggle_record(void)
 {
+#ifndef KLEEIFY_EVENTS
+#ifndef NUKLEAR
     Record_toggle();
+#endif
+#endif
     return false;	/* server doesn't need to know */
 }
 
@@ -330,7 +410,11 @@ static bool Key_press_toggle_sound(void)
 
 static bool Key_press_msgs_stdout(void)
 {
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS
     Print_messages_to_stdout();
+#endif
+#endif
     return false;	/* server doesn't need to know */
 }
 
@@ -360,6 +444,7 @@ static bool Key_press_exit(void)
 {
     int i;
 
+#ifndef NUKLEAR
     /* exit pointer control if exit key pressed in pointer control mode */
     if (clData.pointerControl) {
 	/*
@@ -372,9 +457,14 @@ static bool Key_press_exit(void)
 	Pointer_control_set_state(false);
 	return false;	/* server doesn't need to know */
     }
+#endif
 
     clData.quitMode = true;
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS
     Add_alert_message("Really Quit (y/n) ?", 0.0);
+#endif
+#endif
 
     return false;	/* server doesn't need to know */
 }
@@ -435,6 +525,7 @@ static keys_t quit_mode_exit_key = KEY_DUMMY;
 
 static bool Quit_mode_key_press(keys_t key)
 {
+#ifndef NUKLEAR
     if (key == KEY_YES)
 	Client_exit(0);
 
@@ -443,7 +534,8 @@ static bool Quit_mode_key_press(keys_t key)
 	Clear_alert_messages();
 	quit_mode_exit_key = key;
     }
-	
+#endif
+
     return false;
 }
 
@@ -452,6 +544,7 @@ bool Key_press(keys_t key)
     bool countchange;
     int keycount, i;
 
+#ifndef KLEEIFY_EVENTS 
     if (clData.quitMode)
 	return Quit_mode_key_press(key);
 
@@ -471,12 +564,19 @@ bool Key_press(keys_t key)
 	if ((!countchange) || (keycount != 1))
 	    return true;
     }
+#endif
 
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS /* */
     Key_check_talk_macro(key);
+#endif
+#endif
 
     switch (key) {
+#ifndef NUKLEAR
     case KEY_ID_MODE:
 	return Key_press_id_mode();
+#endif
 
     case KEY_FIRE_SHOT:
     case KEY_FIRE_LASER:
@@ -485,10 +585,12 @@ bool Key_press(keys_t key)
     case KEY_FIRE_HEAT:
     case KEY_DROP_MINE:
     case KEY_DETACH_MINE:
+	DEBUG_PRINTF("KEY_DETACH_MINE");
 	Key_press_autoshield_hack();
 	break;
 
     case KEY_SHIELD:
+	DEBUG_PRINTF("KEY_SHIELD");
 	if (Key_press_shield(key))
 	    return true;
 	break;
@@ -497,14 +599,17 @@ bool Key_press(keys_t key)
     case KEY_REPAIR:
     case KEY_TANK_NEXT:
     case KEY_TANK_PREV:
+	DEBUG_PRINTF("KEY_TANK_PREV");
 	Key_press_fuel();
 	break;
 
     case KEY_SWAP_SETTINGS:
+	DEBUG_PRINTF("KEY_SWAP_SETTINGS");
 	if (!Key_press_swap_settings())
 	    return false;
 	break;
 
+#ifndef KLEEIFY_EVENTS 
     case KEY_SWAP_SCALEFACTOR:
 	if (!Key_press_swap_scalefactor())
 	    return false;
@@ -522,16 +627,46 @@ bool Key_press(keys_t key)
     case KEY_DECREASE_TURNSPEED:
 	return Key_press_decrease_turnspeed();
 
+#ifndef NUKLEAR
     case KEY_TALK:
 	return Key_press_talk();
+#endif
+#else
+    case KEY_SWAP_SCALEFACTOR:
+	DEBUG_PRINTF("KEY_SWAP_SCALEFACTOR");
+        return false;
 
+    case KEY_INCREASE_POWER:
+	IFKLEE(printf("KEY_INCREASE_POWER")); 
+        return false;
+
+    case KEY_DECREASE_POWER:
+	DEBUG_PRINTF("KEY_DECREASE_POWER");
+        return false;
+
+    case KEY_INCREASE_TURNSPEED:
+	DEBUG_PRINTF("KEY_INCREASE_TURNSPEED");
+        return false;
+
+    case KEY_DECREASE_TURNSPEED:
+	DEBUG_PRINTF("KEY_DECREASE_TURNSPEED");
+        return false;
+    case KEY_TALK:
+	DEBUG_PRINTF("KEY_TALK");
+        return false;
+#endif
+
+#ifndef KLEEIFY_EVENTS
+#ifndef NUKLEAR
     case KEY_TOGGLE_OWNED_ITEMS:
-	return Key_press_show_items();
+	DEBUG_PRINTF("KEY_TOGGLE_OWNED_ITEMS");
+	return Key_press_show_items(); //always false
 
     case KEY_TOGGLE_MESSAGES:
-	return Key_press_show_messages();
-
+	DEBUG_PRINTF("KEY_TOGGLE_MESSAGES");
+	return Key_press_show_messages(); //always false
     case KEY_POINTER_CONTROL:
+	DEBUG_PRINTF("KEY_POINTER_CONTROL");
     	/*
 	 * this releases mouse, so we clear the mouse buttons so they
 	 * don't lock on
@@ -541,34 +676,42 @@ bool Key_press(keys_t key)
     	    	Pointer_button_released(i);
 
 	return Key_press_pointer_control();
-
     case KEY_TOGGLE_RECORD:
+	DEBUG_PRINTF("KEY_TOGGLE_RECORD");
 	return Key_press_toggle_record();
 
     case KEY_TOGGLE_SOUND:
+	DEBUG_PRINTF("KEY_TOGGLE_SOUND");
 	return Key_press_toggle_sound();
 
     case KEY_TOGGLE_RADAR_SCORE:
+	DEBUG_PRINTF("KEY_TOGGLE_RADAR_SCORE");
 	return Key_press_toggle_radar_score();
 
     case KEY_PRINT_MSGS_STDOUT:
+	DEBUG_PRINTF("KEY_PRINT_MSGS_STDOUT");
 	return Key_press_msgs_stdout();
 
     case KEY_TOGGLE_FULLSCREEN:
+	DEBUG_PRINTF("KEY_TOGGLE_FULLSCREEN");
 	return Key_press_toggle_fullscreen();
 
     case KEY_SELECT_ITEM:
     case KEY_LOSE_ITEM:
-	if (!Key_press_select_lose_item())
+	DEBUG_PRINTF("KEY_LOSE_ITEM");
+	if (!Key_press_select_lose_item()) // always true, so we always enter if block
 	    return false;
-
     case KEY_EXIT:
-	return Key_press_exit();
+	DEBUG_PRINTF("KEY_EXIT");
+	return Key_press_exit(); // true or false
     case KEY_YES:
-	return Key_press_yes();
+	DEBUG_PRINTF("KEY_YES");
+	return Key_press_yes(); // always false
     case KEY_NO:
-	return Key_press_no();
-
+	DEBUG_PRINTF("KEY_NO");
+	return Key_press_no(); // always false
+#endif 
+#endif 
     default:
 	break;
     }
@@ -594,6 +737,7 @@ bool Key_release(keys_t key)
 	return false;
     }
 
+#ifndef KLEEIFY_EVENTS 
     countchange = Key_dec_count(key);
     keycount = Key_get_count(key);
 
@@ -610,12 +754,14 @@ bool Key_release(keys_t key)
 	    return true;
     }
 
+#endif
 
     switch (key) {
     case KEY_ID_MODE:
     case KEY_TALK:
     case KEY_TOGGLE_OWNED_ITEMS:
     case KEY_TOGGLE_MESSAGES:
+	DEBUG_PRINTF("KEY_TOGGLE_MESSAGES");
 	return false;	/* server doesn't need to know */
 
     /* Don auto-shield hack */
@@ -627,6 +773,7 @@ bool Key_release(keys_t key)
     case KEY_FIRE_HEAT:
     case KEY_DROP_MINE:
     case KEY_DETACH_MINE:
+	DEBUG_PRINTF("KEY_DETACH_MINE");
 	if (auto_shield && shields && !BITV_ISSET(keyv, KEY_SHIELD)) {
 	    /* Here We need to know if any other weapons are still on */
 	    /*      before we turn shield back on   */
@@ -643,6 +790,7 @@ bool Key_release(keys_t key)
 	break;
 
     case KEY_SHIELD:
+	DEBUG_PRINTF("KEY_SHIELD");
 	if (toggle_shield)
 	    return false;
 	else if (auto_shield)
@@ -651,16 +799,22 @@ bool Key_release(keys_t key)
 
     case KEY_REFUEL:
     case KEY_REPAIR:
+	DEBUG_PRINTF("KEY_REPAIR");
 	fuelTime = FUEL_NOTIFY_TIME;
 	break;
 
+#ifndef NUKLEAR
+#ifndef KLEEIFY_EVENTS 
     case KEY_SELECT_ITEM:
     case KEY_LOSE_ITEM:
+	DEBUG_PRINTF("KEY_LOSE_ITEM");
 	if (lose_item_active == 2)
 	    lose_item_active = 1;
 	else
 	    lose_item_active = -(int)(clientFPS + 0.5);
 	break;
+#endif
+#endif
 
     default:
 	break;
@@ -755,10 +909,18 @@ void Keyboard_button_pressed(xp_keysym_t ks)
     }
 #endif
 
+#ifdef KLEEIFY_EVENTS
+    klee_make_symbolic_unknown_size(&key, "key");
+    DEBUG_PRINTF("button PRESSED");
+    if (key > KEY_DUMMY && key < NUM_CLIENT_KEYS)
+      change |= Key_press(key);
+#else
     for (key = Generic_lookup_key(ks, true);
 	 key != KEY_DUMMY;
 	 key = Generic_lookup_key(ks, false))
 	change |= Key_press(key);
+    IFNUKLEAR(Generic_lookup_key_reset()); // rcochran
+#endif
 
     if (change)
 	Net_key_change();
@@ -768,10 +930,18 @@ void Keyboard_button_released(xp_keysym_t ks)
     bool change = false;
     keys_t key;
 
+#ifdef KLEEIFY_EVENTS
+    klee_make_symbolic_unknown_size(&key, "key");
+    DEBUG_PRINTF("button RELEASED");
+    if (key > KEY_DUMMY && key < NUM_CLIENT_KEYS)
+      change |= Key_release(key);
+#else
     for (key = Generic_lookup_key(ks, true);
 	 key != KEY_DUMMY;
 	 key = Generic_lookup_key(ks, false))
 	change |= Key_release(key);
+    IFNUKLEAR(Generic_lookup_key_reset()); // rcochran
+#endif
 
     if (change)
 	Net_key_change();
