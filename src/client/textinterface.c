@@ -106,12 +106,19 @@ static int Get_contact_message(sockbuf_t *sbuf,
 	 * IP address then we don't want to do a reverse lookup.
 	 * Doing a reverse lookup may result in a long and annoying delay.
 	 */
-	if (!strcmp(conpar->server_addr, contact_server))
+	
+#ifndef NUKLEAR
+        if (!strcmp(conpar->server_addr, contact_server))
 	    strlcpy(conpar->server_name, conpar->server_addr,
 		    sizeof(conpar->server_name));
 	else
 	    strlcpy(conpar->server_name, sock_get_last_name(&sbuf->sock),
 		    sizeof(conpar->server_name));
+#else 
+        strlcpy(conpar->server_name, "localhost",
+                sizeof("localhost"));
+
+#endif
 
 	if (Packet_scanf(sbuf, "%u%c%c", &magic, &reply_to, &status) <= 0)
 	    warn("Incomplete contact reply message (%d)", len);
