@@ -1571,8 +1571,12 @@ int Handle_end(long server_loops)
 {
     end_loops = server_loops;
     snooping = (self && eyesId != self->id) ? true : false;
+#ifndef KLEEIFY_NET_FRAME
     update_timing();    
+#endif
+#ifndef KLEE_DISABLE_PAINT
     Paint_frame();
+#endif
 #ifdef SOUND
     audioUpdate();
 #endif
@@ -1589,9 +1593,11 @@ static void update_status(int status)
 {
     static int old_status = 0;
 
+#ifndef KLEEIFY_NET_PACKET
     if (BIT(old_status, OLD_GAME_OVER) && !BIT(status, OLD_GAME_OVER)
 	&& !BIT(status, OLD_PAUSE))
 	Raise_window();
+#endif
 
     /* Player appeared? */
     if (BIT(old_status, OLD_PLAYING|OLD_PAUSE|OLD_GAME_OVER) != OLD_PLAYING) {
@@ -1634,7 +1640,14 @@ int Handle_self(int x, int y, int vx, int vy, int newHeading,
 	packet_size -= 16;
     else
 	packet_size = newPacketSize;
+
+#if KLEEIFY_NET_PACKET
+    if (!g_kleeify_net_packet)
+      update_status(status);
+#else
     update_status(status);
+#endif
+
     return 0;
 }
 
@@ -2019,10 +2032,17 @@ int Handle_fastradar(int x, int y, int size)
 
 int Handle_radar(int x, int y, int size)
 {
+#ifdef KLEEIFY_NET_FRAME
+    return Handle_fastradar
+	((int)((float)(x * RadarWidth) / Setup->width + 0.5),
+	 (int)((float)(y * RadarHeight) / Setup->height + 0.5),
+	 size);
+#else
     return Handle_fastradar
 	((int)((double)(x * RadarWidth) / Setup->width + 0.5),
 	 (int)((double)(y * RadarHeight) / Setup->height + 0.5),
 	 size);
+#endif
 }
 
 int Handle_message(char *msg)
@@ -2391,6 +2411,7 @@ int Client_check_pointer_move_interval(void)
  */
 void Client_exit(int status)
 {
+    input_events_cleanup();
     Net_cleanup();
     Client_cleanup();
     exit(status);

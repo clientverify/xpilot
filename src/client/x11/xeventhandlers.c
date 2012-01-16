@@ -218,6 +218,13 @@ void UnmapNotify_event(XEvent *event)
 
 void ConfigureNotify_event(XEvent *event)
 {
+
+#ifdef NUKLEAR
+    Check_view_dimensions();
+    Net_flush();
+		return;
+#endif
+
     XConfigureEvent *conf;
     static unsigned int conf_width = 0;
     static unsigned int conf_height = 0;

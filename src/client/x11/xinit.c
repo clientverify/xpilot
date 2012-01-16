@@ -234,12 +234,15 @@ static XFontStruct* Set_font(Display* display, GC gc,
 {
     XFontStruct*	font;
 
-    if ((font = XLoadQueryFont(display, fontName)) == NULL) {
+    if ((font = NUKI(XLoadQueryFont)(display, fontName)) == NULL) {
 	error("Couldn't find font '%s' for %s, using default font",
 	      fontName, resName);
-	font = XQueryFont(display, XGContextFromGC(gc));
-    } else
-	XSetFont(display, gc, font->fid);
+	font = NUKI(XQueryFont)(display, XGContextFromGC(gc));
+      KLEE_EXTERNAL_MEM(XFontStruct, font);
+    } else {
+      KLEE_EXTERNAL_MEM(XFontStruct, font);
+    XSetFont(display, gc, font->fid);
+    }
 
     return font;
 }
