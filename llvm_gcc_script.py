@@ -18,7 +18,8 @@ llvmgccroot        = os.getenv("LLVMGCC_ROOT")
 uclibcroot         = os.getenv("UCLIBC_ROOT")
 
 llvmgccdir         = llvmgccroot+"/bin/"
-xpilotdir          = "."
+
+dirname, filename  = os.path.split(os.path.abspath(sys.argv[0]))
 
 llvm_debug_lib_dir = llvmroot+"/lib"
 llvm_lib_dir       = llvmroot+"/lib"
@@ -260,9 +261,10 @@ def main():
             softfloatpass(outfile)
 
 if __name__ == '__main__':
-    logstream = open(xpilotdir+"/pygcc.log","a")
-    sys.stdout = logstream
-    sys.stderr = logstream
+    if g_logging:
+        logstream = open(dirname+"/pygcc.log","a")
+        sys.stdout = logstream
+        sys.stderr = logstream
     for i in range(len(sys.argv)):
         sys.argv[i] = sys.argv[i].replace('"','\\"')
     log("\n----------------")
