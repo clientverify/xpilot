@@ -202,6 +202,7 @@ def makeldargs(args):
                 and not arg.startswith("-I") \
                 and not arg.startswith("-falign-jumps=") \
                 and not arg.startswith("-falign-loops=") \
+                and not arg.startswith("-L") \
                 and not arg.startswith("-fno-stack-protector"):
             ldargs.append(arg)
     #ldargs = list(args)
