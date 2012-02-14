@@ -4,7 +4,7 @@
 //#define DJB_NETLOG
 //#define DJBLOGGING
 
-#define C2S_HASHING
+//#define C2S_HASHING
 //#undef C2S_HASHING
 
 //#define OLDSKOOL
@@ -140,6 +140,7 @@ int nuklear_checkpoint(int x);
 #define HACK_HEIGHT_WANTED 600 
 
 //#define DEBUG_PRINTF klee_warning
+//#define DEBUG_PRINTF printf
 #define DEBUG_PRINTF
 
 #define NUKI(x) nuklear_ ##x
