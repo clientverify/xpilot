@@ -438,8 +438,7 @@ void input_events_cleanup() {
 
 int Net_packet(); /* rcochran */
 #ifdef NUKLEAR
-
-int nuklear_merge() {/*DEBUG_PRINTF("merge")*/; return 0;}
+//int nuklear_merge() {/*DEBUG_PRINTF("merge")*/; return 0;}
 int nuklear_checkpoint(int x) {/*DEBUG_PRINTF("checkpoint")*/; return 0;}
 #endif
 
@@ -671,8 +670,8 @@ void Input_loop(void)
 		unsigned char *clientfd_isset = malloc(sizeof(unsigned char));
 		unsigned char *netfd_isset = malloc(sizeof(unsigned char));
 
-		klee_nuklear_make_symbolic(clientfd_isset, "clientfd_isset");
-		klee_nuklear_make_symbolic(netfd_isset, "netfd_isset");
+		klee_make_symbolic(clientfd_isset, sizeof(unsigned char), "clientfd_isset");
+		klee_make_symbolic(netfd_isset, sizeof(unsigned char), "netfd_isset");
 #endif
 
 #ifndef NUKLEAR
