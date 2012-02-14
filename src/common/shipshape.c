@@ -1177,6 +1177,10 @@ void Convert_ship_2_string(shipshape_t *ship, char *buf, char *ext,
 
     ext[extlen = 0] = '\0';
 
+		// HACK@!
+		strcpy(buf, "(SH:)(EN: -8,0)(MG: 14,0)(LL: -8,8)(RL: -8,-8)(MR: 14,0)");
+		return;
+
     if (shape_version >= 0x3200) {
 	position_t engine, m_gun;
 
