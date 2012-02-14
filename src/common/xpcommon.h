@@ -1279,7 +1279,7 @@ static void keydb_init(struct keydb *db) {
 static void keydb_print(struct keydb *db) {
   checkdie(db->currsize==0||db->vals[db->curridx].type==0,"Must start w/ row!");
   if (db->currsize == 0) {
-    printf("KeyDB is empty\n");
+    fprintf(stderr,"KeyDB is empty\n");
     return;
   }
   int i;
@@ -1288,27 +1288,27 @@ static void keydb_print(struct keydb *db) {
     if (db->vals[idx].type == 0) {
       // Row entry
       if (i != 0) {
-	printf("\n");
+	fprintf(stderr,"\n");
       }
-      printf("Row:  kbseq=%d (0x%02x)(%d):",db->vals[idx].ID,db->vals[idx].ID,db->vals[idx].loopID);
+      fprintf(stderr,"Row:  kbseq=%d (0x%02x)(%d):",db->vals[idx].ID,db->vals[idx].ID,db->vals[idx].loopID);
       if (i != db->currsize-1 
 	  && db->vals[(db->curridx+i+1)%db->arrsize].type == 0) {
-	printf("\tNo frames");
+	fprintf(stderr,"\tNo frames");
       }
     } else if (db->vals[idx].type == 1) {
-      printf("\t%ld(%d)",db->vals[idx].ID,db->vals[idx].loopID);
+      fprintf(stderr,"\t%ld(%d)",db->vals[idx].ID,db->vals[idx].loopID);
     } else {
       checkdie(0,"type must be 0 or 1");
     }
   }
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 static void keydb_fixsize(struct keydb *db) {
   checkdie(db->currsize <= db->arrsize,"currsize should never be > arrsize!");
   checkdie(db->currsize==0||db->vals[db->curridx].type==0,"Must start w/ row!");
   if (db->currsize == db->arrsize) {
-    //printf("needs resizing.\n");
+    //fprintf(stderr,"needs resizing.\n");
     // Resize
     db->arrsize *= KEYDBARRAYSIZEADJ;
     db->vals = (struct keydbval *)realloc(db->vals,
@@ -1322,7 +1322,7 @@ static void keydb_fixsize(struct keydb *db) {
       db->vals[toidx] = db->vals[i];
     }
   } else {
-    //printf("size was fine.\n");
+    //fprintf(stderr,"size was fine.\n");
   }
   checkdie(db->currsize==0||db->vals[db->curridx].type==0,"Must start w/ row!");
 }
@@ -1406,11 +1406,11 @@ static struct keyackmsg * keyackmsg_init(int size) {
 
 static void keyackmsg_print(struct keyackmsg *kam) {
   int flc;
-  printf("Size %d:  ",kam->size);
+  fprintf(stderr,"Size %d:  ",kam->size);
   for (flc = 0; flc < kam->size; flc++) {
-    printf(" %02x",kam->msg[flc]);
+    fprintf(stderr," %02x",kam->msg[flc]);
   }
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 #define UCPTOINT(buf) (((*(buf))<<24) + ((*((buf)+1))<<16) + ((*((buf)+2))<<8) + (*((buf)+3)))
@@ -1424,50 +1424,50 @@ static void keyackmsg_print(struct keyackmsg *kam) {
 
 static void ackedmsg_print(struct ackedmsg *am) {
   int flc;
-  printf("\tackedmsg (%d) size %d:",am->ID,am->size);
+  fprintf(stderr,"\tackedmsg (%d) size %d:",am->ID,am->size);
   for (flc=0; flc<am->size; flc++) {
-    printf("  %02x",am->msg[flc]);
+    fprintf(stderr,"  %02x",am->msg[flc]);
   }
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 static void printbuffer(unsigned char *buf, int len) {
   assert(buf != NULL);
-  printf("Buffer, len: %d (0x%x):\n         ",len,len);
+  fprintf(stderr,"Buffer, len: %d (0x%x):\n         ",len,len);
   int flc;
   for (flc=0; flc<len; flc++) {
-    printf(" %02x",buf[flc]);
+    fprintf(stderr," %02x",buf[flc]);
     if ((flc+1) % 10 == 0) {
-      printf(" ");
+      fprintf(stderr," ");
     }
     if ((flc+1) % 50 == 0) {
-      printf("\n         ");
+      fprintf(stderr,"\n         ");
     }
   }
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 static void printbitbuffer(unsigned char *buf, int len) {
   assert(buf != NULL);
-  printf("Bit buffer, len: %d (0x%x):\n         ",len,len);
+  fprintf(stderr,"Bit buffer, len: %d (0x%x):\n         ",len,len);
   int flc;
   for (flc=0; flc<len; flc++) {
     if (BITV_ISSET(buf,flc)) {
-      printf("1");
+      fprintf(stderr,"1");
     } else {
-      printf("0");
+      fprintf(stderr,"0");
     }
     if ((flc+1) % 2 == 0) {
-      printf(" ");
+      fprintf(stderr," ");
     }
     if ((flc+1) % 8 == 0) {
-      printf("   ");
+      fprintf(stderr,"   ");
     }
     if ((flc+1) % 32 == 0) {
-      printf("\n         ");
+      fprintf(stderr,"\n         ");
     }
   }
-  printf("\n");
+  fprintf(stderr,"\n");
 }
 
 static struct keyackmsg * keydb_makemsg(struct keydb *db) {
@@ -1663,13 +1663,13 @@ static struct keydb keydb_mergeinto(struct keydb *db1, struct keydb *db2) {
   while (true) {
     // Check for end of both db's
     if (i1 == db1->currsize && i2 == db2->currsize) {
-      //printf("Both are now empty.  Exiting.\n");
+      //fprintf(stderr,"Both are now empty.  Exiting.\n");
       return out;
     }
 
     // Check for end of just one db
     if (i1 == db1->currsize || i2 == db2->currsize) {
-      //printf("Just one's empty now.\n");
+      //fprintf(stderr,"Just one's empty now.\n");
       if (i1 == db1->currsize) {
 	ileft = &i2;
 	dbleft = db2;
@@ -1693,13 +1693,13 @@ static struct keydb keydb_mergeinto(struct keydb *db1, struct keydb *db2) {
 
     // Neither db is ended.  
 
-    //printf("Neither is empty yet.\n");
+    //fprintf(stderr,"Neither is empty yet.\n");
     idx1 = (db1->curridx+i1) % db1->arrsize;
     idx2 = (db2->curridx+i2) % db2->arrsize;
     /* This is very ID-based, without much regard for loopID.  Might 
        need to resolve that... */
     if (db1->vals[idx1].ID != db2->vals[idx2].ID) {
-      //printf("Head rows are different.\n");
+      //fprintf(stderr,"Head rows are different.\n");
       // The head rows are different.  Read and add the smallest row.
       if (db1->vals[idx1].ID < db2->vals[idx2].ID) {
 	ileft = &i1;
@@ -1721,7 +1721,7 @@ static struct keydb keydb_mergeinto(struct keydb *db1, struct keydb *db2) {
 	idx = (dbleft->curridx+*ileft) % dbleft->arrsize;
       }
     } else {
-      //printf("Head rows are the same.\n");
+      //fprintf(stderr,"Head rows are the same.\n");
       // The head rows are the same.  Add one.
       idx1 = (db1->curridx+i1) % db1->arrsize;
       keydb_addrow(&out,db1->vals[idx1].ID,db1->vals[idx1].loopID);
@@ -1735,14 +1735,14 @@ static struct keydb keydb_mergeinto(struct keydb *db1, struct keydb *db2) {
 	idx2 = (db2->curridx+i2) % db2->arrsize;
 	if ((i1 == db1->currsize || db1->vals[idx1].type == 0)
 	    && (i2 == db2->currsize || db2->vals[idx2].type == 0)) {
-	  //printf("\tBoth frame lists are empty.\n");
+	  //fprintf(stderr,"\tBoth frame lists are empty.\n");
 	  break;
 	}
 
 	// Check for end of just one frame list
 	if ((i1 == db1->currsize || db1->vals[idx1].type == 0)
 	    || (i2 == db2->currsize || db2->vals[idx2].type == 0)) {
-	  //printf("\tOne frame list is empty.\n");
+	  //fprintf(stderr,"\tOne frame list is empty.\n");
 	  if (i1 == db1->currsize || db1->vals[idx1].type == 0) {
 	    ileft = &i2;
 	    dbleft = db2;
@@ -1760,30 +1760,30 @@ static struct keydb keydb_mergeinto(struct keydb *db1, struct keydb *db2) {
 	}
 	
 	// Neither frame list has ended
-	//printf("\tNeither frame list is empty.\n");
+	//fprintf(stderr,"\tNeither frame list is empty.\n");
 	idx1 = (db1->curridx+i1) % db1->arrsize;
 	idx2 = (db2->curridx+i2) % db2->arrsize;
-	//printf("\t\ti1 = %d, i2 = %d, ID1 = %d, ID2 = %d\n",
+	//fprintf(stderr,"\t\ti1 = %d, i2 = %d, ID1 = %d, ID2 = %d\n",
 	//       i1,i2,db1->vals[idx1].ID,db2->vals[idx2].ID);
 	if (db1->vals[idx1].ID != db2->vals[idx2].ID) {
-	  //printf("\tFrame ID's don't match\n");
+	  //fprintf(stderr,"\tFrame ID's don't match\n");
 	  // Frame ID's don't match.  Add the smaller.
 	  if (db1->vals[idx1].ID < db2->vals[idx2].ID) {
 	    ileft = &i1;
 	    dbleft = db1;
-	    //printf("\t\t1<2\n");
+	    //fprintf(stderr,"\t\t1<2\n");
 	  } else {
 	    ileft = &i2;
 	    dbleft = db2;
-	    //printf("\t\t2<1\n");
+	    //fprintf(stderr,"\t\t2<1\n");
 	  }
 	  idx = (dbleft->curridx+*ileft) % dbleft->arrsize;
 	  keydb_addframe(&out,dbleft->vals[idx].ID,dbleft->vals[idx].loopID);
-	  //printf("\t\ti1 = %d, i2 = %d, *ileft = %d\n",i1,i2,*ileft);
+	  //fprintf(stderr,"\t\ti1 = %d, i2 = %d, *ileft = %d\n",i1,i2,*ileft);
 	  *ileft = *ileft+1;
-	  //printf("\t\ti1 = %d, i2 = %d, *ileft = %d\n",i1,i2,*ileft);
+	  //fprintf(stderr,"\t\ti1 = %d, i2 = %d, *ileft = %d\n",i1,i2,*ileft);
 	} else {
-	  //printf("\tFrame ID's match\n");
+	  //fprintf(stderr,"\tFrame ID's match\n");
 	  // Frame ID's match.  Add.
 	  keydb_addframe(&out,db1->vals[idx1].ID,db1->vals[idx1].loopID);
 	  i1++;
@@ -1872,7 +1872,7 @@ static void ackedmsg_free(struct ackedmsg *am) {
 
 static void ackedmsgdb_print(struct ackedmsgdb *amdb) {
   struct ackedmsg *am = amdb->msghead;
-  printf("Acked msg db:\n");
+  fprintf(stderr,"Acked msg db:\n");
   while (am != NULL) {
     ackedmsg_print(am);
     am = am->next;
@@ -1926,9 +1926,9 @@ static int keydb_srvhandlerecv(unsigned char *bigbuf, unsigned char *buf,
   keydb_freemsg(kam);
 
   // Log this message
-  //printf("buf is:\t");
+  //fprintf(stderr,"buf is:\t");
 	//printbuffer(buf, buf_len);
-  //printf("bigbuf is:\t");
+  //fprintf(stderr,"bigbuf is:\t");
   //printbuffer(bigbuf,len);
   DEBUG("Logging this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
@@ -2060,12 +2060,12 @@ static unsigned char * keydb_srvhandlesend(unsigned char *buf, int len, int *big
   *retlen = *bigbuflen-4-4;
 
   // Log this message
-  //printf("buf is:\t");
+  //fprintf(stderr,"buf is:\t");
   //printbuffer(buf,len);
-  //printf("Logging this msg.  amdb was:\n");
+  //fprintf(stderr,"Logging this msg.  amdb was:\n");
   //ackedmsgdb_print(amdb);
   ackedmsgdb_addmsg(amdb,db->smseq,*bigbuflen,bigbuf);
-  //printf("Logged this msg.  amdb now:\n");
+  //fprintf(stderr,"Logged this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
 
   return bigbuf;
