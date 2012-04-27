@@ -230,5 +230,8 @@ keydb_init(&kdb);
     if (instruments.clientRanker)
 	Print_saved_scores();
 
+#ifdef KLEE
+    cliver_finish();
+#endif
     return retval;
 }
