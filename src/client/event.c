@@ -525,7 +525,6 @@ static keys_t quit_mode_exit_key = KEY_DUMMY;
 
 static bool Quit_mode_key_press(keys_t key)
 {
-#ifndef NUKLEAR
     if (key == KEY_YES)
 	Client_exit(0);
 
@@ -534,7 +533,6 @@ static bool Quit_mode_key_press(keys_t key)
 	Clear_alert_messages();
 	quit_mode_exit_key = key;
     }
-#endif
 
     return false;
 }
@@ -701,6 +699,7 @@ bool Key_press(keys_t key)
 	DEBUG_PRINTF("KEY_LOSE_ITEM");
 	if (!Key_press_select_lose_item()) // always true, so we always enter if block
 	    return false;
+#endif 
     case KEY_EXIT:
 	DEBUG_PRINTF("KEY_EXIT");
 	return Key_press_exit(); // true or false
@@ -710,7 +709,6 @@ bool Key_press(keys_t key)
     case KEY_NO:
 	DEBUG_PRINTF("KEY_NO");
 	return Key_press_no(); // always false
-#endif 
 #endif 
     default:
 	break;
