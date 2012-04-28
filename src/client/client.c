@@ -2411,6 +2411,10 @@ int Client_check_pointer_move_interval(void)
  */
 void Client_exit(int status)
 {
+    DEBUG_PRINTF("CLIENT_EXIT");
+#ifdef NUKLEAR
+    cliver_finish();
+#endif
     input_events_cleanup();
     Net_cleanup();
     Client_cleanup();
