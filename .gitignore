@@ -25,3 +25,8 @@ Makefile
 pygcc.log
 stamp-h1
 tags
+config.h
+config.log
+config.status
+src/client/x11/xpilot-ng-x11
+src/server/xpilot-ng-server
