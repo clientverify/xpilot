@@ -1,7 +1,7 @@
 #ifndef KLEE_H
 #define KLEE_H
 
-//#define DJB_NETLOG
+#define DJB_NETLOG
 //#define DJBLOGGING
 
 //#define C2S_HASHING
@@ -157,7 +157,18 @@ int nuklear_checkpoint(int x);
 #else
 
 #define NUKI(x) x
-#define DEBUG_PRINTF
+
+#ifdef DJB_NETLOG
+#define DEBUG_PRINTF(__x) do { \
+  FILE *debug_printf_logfp = fopen(NETWORK_LOGFILE,"a"); \
+  fprintf(debug_printf_logfp, __FILE__ ": ");            \
+  fprintf(debug_printf_logfp, __x);                      \
+  fprintf(debug_printf_logfp, "\n");                     \
+  fclose(debug_printf_logfp);                            \ 
+} while(0);
+#else
+#define DEBUG_PRINTF(__x) do { printf(__FILE__ ": "); printf(__x); printf("\n"); } while(0);
+#endif
 
 #define IFKLEE(x) 
 #define IFNKLEE(x) x

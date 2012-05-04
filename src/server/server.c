@@ -74,7 +74,9 @@ int main(int argc, char **argv)
     int timer_tick_rate;
     char *addr;
 
+#ifdef DJBLOGGING
     djbensuredirexists(PACKET_LOGDIR);
+#endif
 
     /* world is a global now */
     world = &World;

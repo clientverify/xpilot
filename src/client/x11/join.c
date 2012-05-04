@@ -544,12 +544,13 @@ void Input_loop(void)
 
 #ifdef NUKLEAR
 		nuklear_merge();
+#endif
 		{
 			char tmp_str[128];
 			sprintf(tmp_str, "Start of main_loop %d", n++);
 			DEBUG_PRINTF(tmp_str);
+			DEBUG_PRINTF("nuklear_merge");
 		}
-#endif
 
 #ifdef OLDSKOOL
 		// Increment round count
@@ -763,37 +764,40 @@ kleeify_net_frame_start:
 					klee_write_constraints();
 					_exit(1);
 #endif
-					if (result > 0) {
-						/*
-						 * Now there's a frame being drawn by the X server.
-						 * So we shouldn't try to send more drawing
-						 * requests to the X server or it might get
-						 * overloaded which could cause problems with
-						 * keyboard input.  Besides, we wouldn't even want
-						 * to send more drawing requests because there
-						 * may arive a more recent frame update soon
-						 * and using the CPU now may even slow down the X server
-						 * if it is running on the same CPU.
-						 * So we only check if the X server has sent any more
-						 * keyboard events and then we wait until the X server
-						 * has finished the drawing of our current frame.
-						 */
-						DEBUG_PRINTF("FD_ISSET(netfd) -> Handle_input()");
-						if (Handle_input(1) == -1)
-							return;
+                                        // RAC This code is removed so that there is no ambiguity as to when a client sends a message
+                                        // to the server, i.e., before processing the server to client message (which increments
+                                        // last_loops) or after
+					//if (result > 0) {
+					//	/*
+					//	 * Now there's a frame being drawn by the X server.
+					//	 * So we shouldn't try to send more drawing
+					//	 * requests to the X server or it might get
+					//	 * overloaded which could cause problems with
+					//	 * keyboard input.  Besides, we wouldn't even want
+					//	 * to send more drawing requests because there
+					//	 * may arive a more recent frame update soon
+					//	 * and using the CPU now may even slow down the X server
+					//	 * if it is running on the same CPU.
+					//	 * So we only check if the X server has sent any more
+					//	 * keyboard events and then we wait until the X server
+					//	 * has finished the drawing of our current frame.
+					//	 */
+					//	DEBUG_PRINTF("FD_ISSET(netfd) -> Handle_input()");
+					//	if (Handle_input(1) == -1)
+					//		return;
 
-						DEBUG_PRINTF("FD_ISSET(netfd) -> Net_flush()");
-						if (Net_flush() == -1) {
-							error("Bad net flush before sync");
-							return;
-						}
+					//	DEBUG_PRINTF("FD_ISSET(netfd) -> Net_flush()");
+					//	if (Net_flush() == -1) {
+					//		error("Bad net flush before sync");
+					//		return;
+					//	}
 
-						XSync(dpy, False);
+					//	XSync(dpy, False);
 
-						DEBUG_PRINTF("FD_ISSET(netfd) ->(2) Handle_input()");
-						if (Handle_input(1) == -1)
-							return;
-					}
+					//	DEBUG_PRINTF("FD_ISSET(netfd) ->(2) Handle_input()");
+					//	if (Handle_input(1) == -1)
+					//		return;
+					//}
 
 					if (newSecond) {
 						gettimeofday(&tv2, NULL);
