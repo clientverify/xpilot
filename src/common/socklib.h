@@ -34,7 +34,11 @@
 
 /* DJB */
 #define PACKET_LOGDIR		"packetlogs"
-#define NETWORK_LOGFILE		"net.log"	/* network log */
+#ifdef SERVER
+#define NETWORK_LOGFILE		"net_server.log"	/* network log */
+#else
+#define NETWORK_LOGFILE		"net_client.log"	/* network log */
+#endif
 #define KEY_LOGDIR		"keyboardlogs"	/* keyboard log */
 #define KEY_LOGFILE		"keyboardlog."	/* keyboard log */
 #define FRAME_LOGDIR		PACKET_LOGDIR"/frame_"	/* packet/frame log */
