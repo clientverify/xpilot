@@ -671,6 +671,7 @@ void Input_loop(void)
 		unsigned char *clientfd_isset = malloc(sizeof(unsigned char));
 		unsigned char *netfd_isset = malloc(sizeof(unsigned char));
 
+                cliver_select_event();
 		klee_make_symbolic(clientfd_isset, sizeof(unsigned char), "clientfd_isset");
 		klee_make_symbolic(netfd_isset, sizeof(unsigned char), "netfd_isset");
 #endif

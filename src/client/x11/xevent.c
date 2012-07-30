@@ -275,12 +275,12 @@ void xevent_keyboard(int queued)
 #endif
 
     if (kdpy) {
-		n = my_XEventsQueued(kdpy, queued);
+	n = my_XEventsQueued(kdpy, queued);
         for (i = 0; i < n; i++) {
             IFNUKLEAR(nuklear_checkpoint(0));
             {
                 XEvent *event = malloc(sizeof(XEvent));
-				my_XNextEvent(kdpy, event);
+		my_XNextEvent(kdpy, event);
                 //printf("xevent_keyboard: ");
                 //printEventType((int)event->type);
                 switch (event->type) {
