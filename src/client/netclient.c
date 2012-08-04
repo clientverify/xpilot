@@ -1390,7 +1390,9 @@ int Net_input(void)
      */
     DEBUG_PRINTF("XPILOT: Net_packet().\n"); /* rcochran */
     n = Net_packet();
+#ifdef NUKLEAR
     cliver_select_event();
+#endif
 
     if (last_frame != oldest_frame) {
 	/*
