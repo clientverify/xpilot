@@ -34,10 +34,12 @@
 
 /* DJB */
 #define PACKET_LOGDIR		"packetlogs"
+#define SERVER_LOGFILE		"net_server.log"	/* network log */
+#define CLIENT_LOGFILE		"net_client.log"	/* network log */
 #ifdef SERVER
-#define NETWORK_LOGFILE		"net_server.log"	/* network log */
+#define NETWORK_LOGFILE		SERVER_LOGFILE
 #else
-#define NETWORK_LOGFILE		"net_client.log"	/* network log */
+#define NETWORK_LOGFILE		CLIENT_LOGFILE
 #endif
 #define KEY_LOGDIR		"keyboardlogs"	/* keyboard log */
 #define KEY_LOGFILE		"keyboardlog."	/* keyboard log */

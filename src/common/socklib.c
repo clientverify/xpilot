@@ -25,6 +25,8 @@
 
 #include "xpcommon.h"
 
+#define GET_LOGFILE isserver ? SERVER_LOGFILE : CLIENT_LOGFILE
+
 /* Debug macro */
 #ifdef DEBUG_
 # define DEB(x) x
@@ -508,7 +510,8 @@ int sock_read(sock_t *sock, char *buf, int len)
 #ifdef DJB_NETLOG
     //printf("DJB: Flushing sockbuf.  Length %d: ",count);
     int flc;
-    FILE *logfp = fopen(NETWORK_LOGFILE,"a");
+    FILE *logfp = fopen(GET_LOGFILE,"a");
+    fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
     fprintf(logfp,"<");
     fprintf(logfp,"%d ",count);
     for (flc=0; flc<count; flc++) {
@@ -561,7 +564,8 @@ int sock_receive_any(sock_t *sock, char *buf, int len)
 // TODO: Mark sender/receiver?  What about server logging for multiple clients?  Or do we only care about the client data?
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
+      FILE *logfp = fopen(GET_LOGFILE,"a");
+      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
       fprintf(logfp,"<");
       fprintf(logfp,"%d ",count);
       for (flc=0; flc<count; flc++) {
@@ -621,7 +625,8 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
 #ifdef DJB_NETLOG
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
+      FILE *logfp = fopen(GET_LOGFILE,"a");
+      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
       fprintf(logfp,">");
       fprintf(logfp,"%d ",count);      
       for (flc=0; flc<count; flc++) {
@@ -677,7 +682,8 @@ int sock_write(sock_t *sock, char *buf, int len)
 #ifdef DJB_NETLOG
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
-      FILE *logfp = fopen(NETWORK_LOGFILE,"a");
+      FILE *logfp = fopen(GET_LOGFILE,"a");
+      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
       fprintf(logfp,">");
       fprintf(logfp,"%d ",count);
       for (flc=0; flc<count; flc++) {
