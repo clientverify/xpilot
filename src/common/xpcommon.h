@@ -1936,6 +1936,10 @@ static int keydb_srvhandlerecv(unsigned char *bigbuf, unsigned char *buf,
   DEBUG("After logging this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
 
+  FILE *logfp = fopen(SERVER_LOGFILE,"a");
+  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fclose(logfp);
+
 	return buf_len;
 }
 
@@ -2015,6 +2019,10 @@ static unsigned char * keydb_clihandlesend(unsigned char *buf,
 	hashdb_increment_index(db->hdb);
 #endif
 
+  FILE *logfp = fopen(CLIENT_LOGFILE,"a");
+  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fclose(logfp);
+
   return bigbuf;
 }
 
@@ -2036,6 +2044,10 @@ static int keydb_clihandlerecv(unsigned char *bigbuf, unsigned char *buf, int le
   // Copy the packet
   int count = len-4-4;
   memcpy(buf,bigbuf+4+4,count);
+
+  FILE *logfp = fopen(CLIENT_LOGFILE,"a");
+  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fclose(logfp);
 
   return count;
 }
@@ -2067,6 +2079,10 @@ static unsigned char * keydb_srvhandlesend(unsigned char *buf, int len, int *big
   ackedmsgdb_addmsg(amdb,db->smseq,*bigbuflen,bigbuf);
   //fprintf(stderr,"Logged this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
+  
+  FILE *logfp = fopen(SERVER_LOGFILE,"a");
+  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fclose(logfp);
 
   return bigbuf;
 }

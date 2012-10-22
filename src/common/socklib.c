@@ -511,7 +511,7 @@ int sock_read(sock_t *sock, char *buf, int len)
     //printf("DJB: Flushing sockbuf.  Length %d: ",count);
     int flc;
     FILE *logfp = fopen(GET_LOGFILE,"a");
-    fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+    fprintf(logfp,"SLTS %f\n", djbwctime());
     fprintf(logfp,"<");
     fprintf(logfp,"%d ",count);
     for (flc=0; flc<count; flc++) {
@@ -565,7 +565,7 @@ int sock_receive_any(sock_t *sock, char *buf, int len)
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
       FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+      fprintf(logfp,"SLTS %f\n", djbwctime());
       fprintf(logfp,"<");
       fprintf(logfp,"%d ",count);
       for (flc=0; flc<count; flc++) {
@@ -626,7 +626,7 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
       FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+      fprintf(logfp,"SLTS %f\n", djbwctime());
       fprintf(logfp,">");
       fprintf(logfp,"%d ",count);      
       for (flc=0; flc<count; flc++) {
@@ -683,7 +683,7 @@ int sock_write(sock_t *sock, char *buf, int len)
       //printf("DJB: Flushing sockbuf.  Length %d: ",count);
       int flc;
       FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+      fprintf(logfp,"SLTS %f\n", djbwctime());
       fprintf(logfp,">");
       fprintf(logfp,"%d ",count);
       for (flc=0; flc<count; flc++) {
