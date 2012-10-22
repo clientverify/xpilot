@@ -1936,9 +1936,15 @@ static int keydb_srvhandlerecv(unsigned char *bigbuf, unsigned char *buf,
   DEBUG("After logging this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
 
+#ifndef KLEE
+#ifndef NUKLEAR
+#ifdef DJB_NETLOG
   FILE *logfp = fopen(SERVER_LOGFILE,"a");
   fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
   fclose(logfp);
+#endif
+#endif
+#endif
 
 	return buf_len;
 }
@@ -2019,9 +2025,15 @@ static unsigned char * keydb_clihandlesend(unsigned char *buf,
 	hashdb_increment_index(db->hdb);
 #endif
 
+#ifndef KLEE
+#ifndef NUKLEAR
+#ifdef DJB_NETLOG
   FILE *logfp = fopen(CLIENT_LOGFILE,"a");
   fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
   fclose(logfp);
+#endif
+#endif
+#endif
 
   return bigbuf;
 }
@@ -2045,9 +2057,15 @@ static int keydb_clihandlerecv(unsigned char *bigbuf, unsigned char *buf, int le
   int count = len-4-4;
   memcpy(buf,bigbuf+4+4,count);
 
+#ifndef KLEE
+#ifndef NUKLEAR
+#ifdef DJB_NETLOG
   FILE *logfp = fopen(CLIENT_LOGFILE,"a");
   fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
   fclose(logfp);
+#endif
+#endif
+#endif
 
   return count;
 }
@@ -2080,9 +2098,15 @@ static unsigned char * keydb_srvhandlesend(unsigned char *buf, int len, int *big
   //fprintf(stderr,"Logged this msg.  amdb now:\n");
   //ackedmsgdb_print(amdb);
   
+#ifndef KLEE
+#ifndef NUKLEAR
+#ifdef DJB_NETLOG
   FILE *logfp = fopen(SERVER_LOGFILE,"a");
   fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
   fclose(logfp);
+#endif
+#endif
+#endif
 
   return bigbuf;
 }
