@@ -1940,7 +1940,7 @@ static int keydb_srvhandlerecv(unsigned char *bigbuf, unsigned char *buf,
 #ifndef NUKLEAR
 #ifdef DJB_NETLOG
   FILE *logfp = fopen(SERVER_LOGFILE,"a");
-  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fprintf(logfp,"MSGINFO %f c2s %d %d\n", djbwctime(), len, buf_len);
   fclose(logfp);
 #endif
 #endif
@@ -2029,7 +2029,7 @@ static unsigned char * keydb_clihandlesend(unsigned char *buf,
 #ifndef NUKLEAR
 #ifdef DJB_NETLOG
   FILE *logfp = fopen(CLIENT_LOGFILE,"a");
-  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fprintf(logfp,"MSGINFO %f c2s %d %d\n", djbwctime(), message_len, len);
   fclose(logfp);
 #endif
 #endif
@@ -2061,7 +2061,7 @@ static int keydb_clihandlerecv(unsigned char *bigbuf, unsigned char *buf, int le
 #ifndef NUKLEAR
 #ifdef DJB_NETLOG
   FILE *logfp = fopen(CLIENT_LOGFILE,"a");
-  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fprintf(logfp,"MSGINFO %f s2c %d %d\n", djbwctime(), len, count);
   fclose(logfp);
 #endif
 #endif
@@ -2102,7 +2102,7 @@ static unsigned char * keydb_srvhandlesend(unsigned char *buf, int len, int *big
 #ifndef NUKLEAR
 #ifdef DJB_NETLOG
   FILE *logfp = fopen(SERVER_LOGFILE,"a");
-  fprintf(logfp,"TIMESTAMP %f\n", djbwctime());
+  fprintf(logfp,"MSGINFO %f s2c %d %d\n", djbwctime(), len+4+4, len);
   fclose(logfp);
 #endif
 #endif

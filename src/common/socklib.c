@@ -505,23 +505,23 @@ int sock_read(sock_t *sock, char *buf, int len)
   } else {
 
     /* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-    //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-    int flc;
-    FILE *logfp = fopen(GET_LOGFILE,"a");
-    fprintf(logfp,"SLTS %f\n", djbwctime());
-    fprintf(logfp,"<");
-    fprintf(logfp,"%d ",count);
-    for (flc=0; flc<count; flc++) {
-      fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-    }
-    fprintf(logfp,"\n");
-    fclose(logfp);
-#endif
-#endif
-#endif
+//#ifndef KLEE
+//#ifndef NUKLEAR
+//#ifdef DJB_NETLOG
+//    //printf("DJB: Flushing sockbuf.  Length %d: ",count);
+//    int flc;
+//    FILE *logfp = fopen(GET_LOGFILE,"a");
+//    fprintf(logfp,"SLTS %f\n", djbwctime());
+//    fprintf(logfp,"<");
+//    fprintf(logfp,"%d ",count);
+//    for (flc=0; flc<count; flc++) {
+//      fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
+//    }
+//    fprintf(logfp,"\n");
+//    fclose(logfp);
+//#endif
+//#endif
+//#endif
     /* DJB */
 
   }
@@ -556,26 +556,26 @@ int sock_receive_any(sock_t *sock, char *buf, int len)
     } else {
 
 /* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-// TODO: Change to only record on client or server?
-// TODO: Try replaying streams?
-// TODO: Mark sender/receiver?  What about server logging for multiple clients?  Or do we only care about the client data?
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"SLTS %f\n", djbwctime());
-      fprintf(logfp,"<");
-      fprintf(logfp,"%d ",count);
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
+//#ifndef KLEE
+//#ifndef NUKLEAR
+//#ifdef DJB_NETLOG
+//// TODO: Change to only record on client or server?
+//// TODO: Try replaying streams?
+//// TODO: Mark sender/receiver?  What about server logging for multiple clients?  Or do we only care about the client data?
+//      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
+//      int flc;
+//      FILE *logfp = fopen(GET_LOGFILE,"a");
+//      fprintf(logfp,"SLTS %f\n", djbwctime());
+//      fprintf(logfp,"<");
+//      fprintf(logfp,"%d ",count);
+//      for (flc=0; flc<count; flc++) {
+//	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
+//      }
+//      fprintf(logfp,"\n");
+//      fclose(logfp);
+//#endif
+//#endif
+//#endif
 /* DJB */
     }
 
@@ -620,23 +620,23 @@ int sock_send_dest(sock_t *sock, char *host, int port, char *buf, int len)
     } else {
 
 /* DJB */
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"SLTS %f\n", djbwctime());
-      fprintf(logfp,">");
-      fprintf(logfp,"%d ",count);      
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
+//#ifndef KLEE
+//#ifndef NUKLEAR
+//#ifdef DJB_NETLOG
+//      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
+//      int flc;
+//      FILE *logfp = fopen(GET_LOGFILE,"a");
+//      fprintf(logfp,"SLTS %f\n", djbwctime());
+//      fprintf(logfp,">");
+//      fprintf(logfp,"%d ",count);      
+//      for (flc=0; flc<count; flc++) {
+//	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
+//      }
+//      fprintf(logfp,"\n");
+//      fclose(logfp);
+//#endif
+//#endif
+//#endif
 /* DJB */
 
     }
@@ -677,23 +677,23 @@ int sock_write(sock_t *sock, char *buf, int len)
 
 /* DJB */
 	} else {
-#ifndef KLEE
-#ifndef NUKLEAR
-#ifdef DJB_NETLOG
-      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
-      int flc;
-      FILE *logfp = fopen(GET_LOGFILE,"a");
-      fprintf(logfp,"SLTS %f\n", djbwctime());
-      fprintf(logfp,">");
-      fprintf(logfp,"%d ",count);
-      for (flc=0; flc<count; flc++) {
-	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
-      }
-      fprintf(logfp,"\n");
-      fclose(logfp);
-#endif
-#endif
-#endif
+//#ifndef KLEE
+//#ifndef NUKLEAR
+//#ifdef DJB_NETLOG
+//      //printf("DJB: Flushing sockbuf.  Length %d: ",count);
+//      int flc;
+//      FILE *logfp = fopen(GET_LOGFILE,"a");
+//      fprintf(logfp,"SLTS %f\n", djbwctime());
+//      fprintf(logfp,">");
+//      fprintf(logfp,"%d ",count);
+//      for (flc=0; flc<count; flc++) {
+//	fprintf(logfp,"%02x ",(unsigned char)buf[flc]);
+//      }
+//      fprintf(logfp,"\n");
+//      fclose(logfp);
+//#endif
+//#endif
+//#endif
 /* DJB */
     }
 
