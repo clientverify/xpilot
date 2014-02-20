@@ -148,11 +148,9 @@ def compilepass(args,cc_args,dolinking,outfile):
         #cmd = "llvm-ld "+" ".join(ldargs)
     else:
         if outfile.endswith(".o"):
-            #cmd = "llvm-gcc "+llvmgccargs+" -I"+uclibc_include+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)+" -o "+outfile+".orig"
-            cmd = llvmgcc+" "+llvmgccargs+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)+" -o "+outfile+".orig"
+            cmd = llvmgcc+" "+llvmgccargs+" -I"+uclibc_include+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)+" -o "+outfile+".orig"
         else:
-            #cmd = "llvm-gcc "+llvmgccargs+" -I"+uclibc_include+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)
-            cmd = llvmgcc+" "+llvmgccargs+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)
+            cmd = llvmgcc+" "+llvmgccargs+" -I"+uclibc_include+" -D__GNUC__ --emit-llvm "+' '.join(cc_args)
 
     log("Compile command: "+cmd)
     result = commands.getstatusoutput(cmd)
