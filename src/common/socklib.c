@@ -729,7 +729,8 @@ void sock_get_local_hostname(char *name, unsigned size,
 #endif
     static const char	xpilot[] = "xpilot";
 
-    gethostname(name, size);
+    //gethostname(name, size);
+    strncpy(name, "localhost", size);
     if ((he = sock_get_host_by_name(name)) == NULL)
 	return;
     strlcpy(name, he->h_name, size);
@@ -767,7 +768,8 @@ void sock_get_local_hostname(char *name, unsigned size,
 	}
 	/* make sure this is a valid FQDN. */
 	if ((he = sock_get_host_by_name(name)) == NULL) {
-	    gethostname(name, size);
+	    //gethostname(name, size);
+	    strncpy(name, "localhost", size);
 	    return;
 	}
     }

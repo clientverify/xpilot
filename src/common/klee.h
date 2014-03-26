@@ -17,6 +17,8 @@
 //#define DEBUG_PRINTF klee_warning 
 #define NUKI(x) x
 
+/////////////////////////////////////////////////////
+// no longer used - rac
 #ifdef KLEEIFY_EVENTS 
 #define KLEEIFY
 #define KLEEIFY_PREPARE_LOOPS 1
@@ -45,6 +47,7 @@ extern unsigned g_klee_sent_keyv; /* set to 1 if Send_keyboard() is called */
 #else
 #define KLEEIFY_PREPARE_LOOPS 0
 #endif
+/////////////////////////////////////////////////////
 
 //#define error(str) printf("ERROR: %s:%d %s\n", __FILE__, __LINE__, str)
 //#define warn(str) printf("WARNING: %s:%d %s\n", __FILE__, __LINE__, str)
@@ -133,7 +136,7 @@ int nuklear_checkpoint(int x);
 #ifdef OLDSKOOL
 #define HACK_HOSTNAME "brawn.cs.unc.edu"
 #else
-#define HACK_HOSTNAME "kudzoo.cs.unc.edu"
+#define HACK_HOSTNAME "localhost"
 #endif
 
 #define HACK_WIDTH_WANTED 542

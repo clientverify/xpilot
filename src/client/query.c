@@ -127,7 +127,8 @@ static int Query_fudged(sock_t *sock, int port, char *msg, size_t msglen)
     unsigned long	addrmask, netmask;
     char		host_name[64];
 
-    gethostname(host_name, sizeof(host_name));
+    //gethostname(host_name, sizeof(host_name));
+    strncpy(host_name, "localhost", sizeof(host_name));
     if ((h = gethostbyname(host_name)) == NULL) {
 	error("gethostbyname");
 	return -1;
