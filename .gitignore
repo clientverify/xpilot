@@ -30,3 +30,5 @@ config.log
 config.status
 src/client/x11/xpilot-ng-x11
 src/server/xpilot-ng-server
+TAGS
+Doxyfile
