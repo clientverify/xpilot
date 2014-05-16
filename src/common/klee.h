@@ -115,6 +115,8 @@ extern unsigned g_klee_sent_keyv; /* set to 1 if Send_keyboard() is called */
 
 #elif defined(NUKLEAR)
 
+#include "nuklear_x11.h"
+
 //#define KLEE_DISABLE_PAINT 1
 #define RECV_WINDOW_SIZE 1
 
