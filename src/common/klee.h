@@ -166,7 +166,7 @@ int nuklear_checkpoint(int x);
   fprintf(debug_printf_logfp, __FILE__ ": ");            \
   fprintf(debug_printf_logfp, __x);                      \
   fprintf(debug_printf_logfp, "\n");                     \
-  fclose(debug_printf_logfp);                            \ 
+  fclose(debug_printf_logfp);                            \
 } while(0);
 #else
 #define DEBUG_PRINTF(__x) do { printf(__FILE__ ": "); printf(__x); printf("\n"); } while(0);
