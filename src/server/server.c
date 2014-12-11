@@ -416,6 +416,7 @@ int End_game(void)
 	    DEBUG("row:  ID = %d\n",kdb.vals[idx].ID);
 	    IFDEBUG(ackedmsg_print(am);)
 	    kt.objects[i].name = "c2s";
+            memcpy(&(kt.objects[i].timestamp), &(am->timestamp), sizeof(struct timeval));
 	    kt.objects[i].numBytes = am->size+4;
 	    unsigned char *temp = (unsigned char *)malloc(am->size+4);
 	    INTTOUCP(temp,kdb.vals[idx].loopID);
@@ -433,6 +434,7 @@ int End_game(void)
 	checkdie(am != NULL, "popped a null frame message!");
 	//ackedmsg_print(am);
 	kt.objects[i].name = "s2c";
+        memcpy(&(kt.objects[i].timestamp), &(am->timestamp), sizeof(struct timeval));
 	kt.objects[i].numBytes = am->size+4;
 	unsigned char *temp = (unsigned char *)malloc(am->size+4);
 	INTTOUCP(temp,kdb.vals[idx].loopID);

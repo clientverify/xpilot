@@ -769,6 +769,7 @@ static inline char * djbklogfilename(int loops) {
 typedef struct KTestObject KTestObject;
 struct KTestObject {
   char *name;
+  struct timeval timestamp;
   unsigned numBytes;
   unsigned char *bytes;
 };
@@ -788,7 +789,7 @@ struct KTest {
   KTestObject *objects;
 };
 
-#define KTEST_VERSION 3
+#define KTEST_VERSION 4
 #define KTEST_MAGIC_SIZE 5
 #define KTEST_MAGIC "KTEST"
 
@@ -812,6 +813,27 @@ static int write_uint32(FILE *f, unsigned value) {
   data[2] = value>> 8;
   data[3] = value>> 0;
   return fwrite(data, 1, 4, f)==4;
+}
+
+static int read_uint64(FILE *f, uint64_t *value_out) {
+  unsigned char data[8];
+  if (fread(data, 8, 1, f)!=1)
+    return 0;
+  *value_out = (((((((((((( (data[0]<<8) + data[1])<<8) + data[2])<<8) + data[3])<<8) + data[4])<<8) + data[5])<<8) + data[6])<<8) + data[7];
+  return 1;
+}
+
+static int write_uint64(FILE *f, uint64_t value) {
+  unsigned char data[8];
+  data[0] = value>>56;
+  data[1] = value>>48;
+  data[2] = value>>40;
+  data[3] = value>>32;
+  data[4] = value>>24;
+  data[5] = value>>16;
+  data[6] = value>> 8;
+  data[7] = value>> 0;
+  return fwrite(data, 1, 8, f)==8;
 }
 
 static int read_string(FILE *f, char **value_out) {
@@ -883,27 +905,31 @@ static int kTest_toFile(KTest *bo, const char *path) {
   for (i=0; i<bo->numArgs; i++) {
     if (!write_string(f, bo->args[i]))
       goto error;
-  } 
+  }
 
   if (!write_uint32(f, bo->symArgvs))
     goto error;
   if (!write_uint32(f, bo->symArgvLen))
     goto error; 
-    
+
   if (!write_uint32(f, bo->numObjects))
     goto error;
   for (i=0; i<bo->numObjects; i++) {
     KTestObject *o = &bo->objects[i];
     if (!write_string(f, o->name))
-      goto error; 
+      goto error;
+    if (!write_uint64(f, o->timestamp.tv_sec))
+      goto error;
+    if (!write_uint64(f, o->timestamp.tv_usec))
+      goto error;
     if (!write_uint32(f, o->numBytes))
       goto error;
     if (fwrite(o->bytes, o->numBytes, 1, f)!=1)
       goto error;
   }   
-      
+
   fclose(f);
-    
+
   return 1;
  error:
   if (f) fclose(f);
@@ -1253,6 +1279,7 @@ struct keyackmsg {
 struct ackedmsg {
   long ID;
   long size;
+  struct timeval timestamp;
   unsigned char *msg;
   struct ackedmsg *next;
 };
@@ -1805,6 +1832,9 @@ static void ackedmsgdb_addmsg(struct ackedmsgdb *amdb, long ID, long size, unsig
   struct ackedmsg *newmsg = (struct ackedmsg *)malloc(sizeof(struct ackedmsg));
   newmsg->ID = ID;
   newmsg->size = size;
+
+  gettimeofday(&(newmsg->timestamp), NULL);
+
   newmsg->msg = (unsigned char *)malloc(size);
   int flc;
   for (flc=0; flc<size; flc++) {
