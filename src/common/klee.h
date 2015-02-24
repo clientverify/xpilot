@@ -1,7 +1,7 @@
 #ifndef KLEE_H
 #define KLEE_H
 
-#define DJB_NETLOG
+//#define DJB_NETLOG
 //#define DJBLOGGING
 
 //#define C2S_HASHING
@@ -55,7 +55,7 @@ extern unsigned g_klee_sent_keyv; /* set to 1 if Send_keyboard() is called */
 
 //#define KLEE_PRINTF
 //#define KLEE_PRINTF(x) printf(x "\n")
-#define KLEE_PRINTF klee_warning
+//#define KLEE_PRINTF klee_warning
 
 #define KLEE_PRINTF_FAIL 
 //#define KLEE_PRINTF_FAIL klee_warning
@@ -169,7 +169,8 @@ int nuklear_checkpoint(int x);
   fclose(debug_printf_logfp);                            \
 } while(0);
 #else
-#define DEBUG_PRINTF(__x) do { printf(__FILE__ ": "); printf(__x); printf("\n"); } while(0);
+//#define DEBUG_PRINTF(__x) do { printf(__FILE__ ": "); printf(__x); printf("\n"); } while(0);
+#define DEBUG_PRINTF(__x) 
 #endif
 
 #define IFKLEE(x) 
