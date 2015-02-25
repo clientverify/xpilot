@@ -1894,7 +1894,6 @@ int Handle_item(int x, int y, int type)
 
 int Handle_fastshot(int type, u_byte *p, int n)
 {
-#ifndef NUKLEAR
 #define num_		(num_fastshot[type])
 #define max_		(max_fastshot[type])
 #define ptr_		(fastshot_ptr[type])
@@ -1902,12 +1901,10 @@ int Handle_fastshot(int type, u_byte *p, int n)
 #undef num_
 #undef max_
 #undef ptr_
-#endif
 }
 
 int Handle_debris(int type, u_byte *p, int n)
 {
-#ifndef NUKLEAR
 #define num_		(num_debris[type])
 #define max_		(max_debris[type])
 #define ptr_		(debris_ptr[type])
@@ -1915,7 +1912,6 @@ int Handle_debris(int type, u_byte *p, int n)
 #undef num_
 #undef max_
 #undef ptr_
-#endif
 }
 
 int Handle_wreckage(int x, int y, int wrecktype, int size, int rotation)
